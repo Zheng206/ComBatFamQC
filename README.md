@@ -1,8 +1,17 @@
 # ComBatFamQC
 
-The **ComBatFamQC** package is a powerful tool designed to streamline interactive batch effect diagnostics, harmonization, and post-harmonization downstream analysis. This package is specifically tailored to provide both interactive qualitative visualization and statistical testing for batch effects diagnostics, as well as to offer various easily-used built-in harmonization techniques to facilitate a better harmonization process.
+The **ComBatFamQC** package is a powerful tool designed to streamline <span style="color:lightsalmon;">interactive batch effect diagnostics</span>, <span style="color:lightgreen;">harmonization</span>, and <span style="color:cornflowerblue;">post-harmonization downstream analysis</span>. This package is specifically tailored to provide both <u>interactive qualitative visualization</u> and <u>statistical testing for batch effects diagnostics</u>, as well as to offer various easily-used <u>built-in harmonization techniques</u> to facilitate a better harmonization process.
 
-Additionally, the package provides life span age trends of brain structures and residual datasets, eliminating specific covariates' effects to better conduct post-harmonization downstream analysis. In terms of the final delivery, it will provide interactive visualization through R Shiny for batch effect diagnostics and age trend visualization. Additionally, it integrates the harmonization process and can provide a harmonized dataset, fitted ComBat model, residual dataset, fitted regression model, etc.
+Additionally, the package provides <u>life span age trends of brain structures</u> and <u>residual datasets</u>, eliminating specific covariates' effects to better conduct post-harmonization downstream analysis. In terms of the final delivery, it will provide interactive visualization through R Shiny for batch effect diagnostics and age trend visualization. Additionally, it integrates the harmonization process and can provide a harmonized dataset, fitted ComBat model, residual dataset, fitted regression model, etc.
+
+To further simplify the harmonization process for broader audience from different backgrounds, two unified command line interface are developed controling for different stages of the processing pipeline (can be found in **inst** folder):
+
+-   **CombatQC_CLI.R**: Batch Effect Diagnostics & Harmonization Stage
+    -  Interactive Batch Effect Diagnostics
+    -  Data Harmonization  
+-   **post_CLI.R**: Post-Harmonization Stage
+    -   Life span age trend of brain structures visualization
+    -   Residual data set removing unwanted covariates' effects
 
 ## Diagram
 ![ComBatFamQC Diagram](/figure/QC_diagram.png)
@@ -16,10 +25,10 @@ The ComBatFamQC package offers the following five key functionalities:
 -   **Batch Effect Diagnostics**: ComBatFamQC provides two types of batch effect diagnostics methods for both individual batch effects and global batch effects: 1) Qualitative Visualization and 2) Statistical Testing. It simplifies the process of performing statistical analyses to detect potential batch effects and provides all relevant statistical test results for batch effect visualization and evaluation.
 
 -   **Harmonization**: ComBatFamQC also provides four types of commonly used harmonization techniques, integrated through the [ComBatFamily](https://github.com/andy1764/ComBatFamily) package developed by Dr. Andrew Chen, for users to consider. The four harmonization techniques include: 
-    -   Original ComBat
-    -   Longitudinal ComBat
-    -   ComBat-GAM
-    -   CovBat.
+    -   Original ComBat (Johnson et al., 2007)
+    -   Longitudinal ComBat (Beer et al., 2020)
+    -   ComBat-GAM (Pomponio et al., 2020)
+    -   CovBat. (Chen et al., 2021)
 
 -   **Interactive Visualization through R Shiny**: The ComBatFamQC package comes with an interactive visualization tool built on R Shiny, providing an intuitive user interface to explore and evaluate batch effects, as well as conduct interactive harmonization if needed. The output is organized into multiple tabs, which includes:
 
@@ -46,10 +55,13 @@ The ComBatFamQC package offers the following five key functionalities:
 ## Installation
 
 ```{r}
+if (!require("devtools", quietly = TRUE)) {
+    install.packages("devtools")   
+}
+
 library(devtools)
 
-devtools::install_github("Zheng206/ComBatFam_Pipeline/ComBatFamQC", build_vignettes = TRUE)
-
+devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
 ```
 
 ## Tutorial
