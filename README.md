@@ -1,17 +1,17 @@
 # ComBatFamQC
 
-The **ComBatFamQC** package is a powerful tool designed to streamline <span style="color:lightsalmon;">interactive batch effect diagnostics</span>, <span style="color:lightgreen;">harmonization</span>, and <span style="color:cornflowerblue;">post-harmonization downstream analysis</span>. This package is specifically tailored to provide both <u>interactive qualitative visualization</u> and <u>statistical testing for batch effects diagnostics</u>, as well as to offer various easily-used <u>built-in harmonization techniques</u> to facilitate a better harmonization process.
+The **ComBatFamQC** package is a powerful tool designed to streamline <span style="color:purple;">interactive batch effect diagnostics</span>, <span style="color:green;">harmonization</span>, and <span style="color:blue;">post-harmonization downstream analysis</span>. This package is specifically tailored to provide both <u>interactive qualitative visualization</u> and <u>statistical testing for batch effects diagnostics</u>, as well as to offer various easily-used <u>built-in harmonization techniques</u> to facilitate a better harmonization process.
 
 Additionally, the package provides <u>life span age trends of brain structures</u> and <u>residual datasets</u>, eliminating specific covariates' effects to better conduct post-harmonization downstream analysis. In terms of the final delivery, it will provide interactive visualization through R Shiny for batch effect diagnostics and age trend visualization. Additionally, it integrates the harmonization process and can provide a harmonized dataset, fitted ComBat model, residual dataset, fitted regression model, etc.
 
-To further simplify the harmonization process for broader audience from different backgrounds, two unified command line interface are developed controling for different stages of the processing pipeline (can be found in **inst** folder):
+To make the harmonization process more accessible to users from diverse backgrounds, two unified command-line interfaces have been developed for different stages of the processing pipeline (located in the **inst** folder):
 
 -   **CombatQC_CLI.R**: Batch Effect Diagnostics & Harmonization Stage
-    -  Interactive Batch Effect Diagnostics
-    -  Data Harmonization  
+    -  Offers interactive diagnostics for batch effects
+    -  Performs data harmonization to adjust for batch effects  
 -   **post_CLI.R**: Post-Harmonization Stage
-    -   Life span age trend of brain structures visualization
-    -   Residual data set removing unwanted covariates' effects
+    -   Visualizes age trends across brain structures over the lifespan
+    -   Generates a residual dataset with unwanted covariate effects removed
 
 ## Diagram
 ![ComBatFamQC Diagram](/figure/QC_diagram.png)
