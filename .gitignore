@@ -1,0 +1,7 @@
+inst/doc
+/old
+.DS_Store
+.Rbuildignore
+.Rhistory
+.Rproj.user/
+*.Rproj

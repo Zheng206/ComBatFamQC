@@ -1,0 +1,39 @@
+Package: ComBatFamQC
+Title: Harmonization QC visualization
+Version: 0.0.1
+Author: Zheng Ren
+Maintainer: Zheng Ren <zren1422@gmail.com>
+Description: Streamline interactive batch effect diagnostics, harmonization, and post-harmonization downstream analysis to greatly simplify the data harmonization process and improve transparency and reproducibility. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    tidyr,
+    dplyr,
+    tidyverse,
+    ggplot2,
+    DT,
+    shiny,
+    car,
+    broom,
+    pbkrtest,
+    parallel,
+    Rtsne,
+    MDMR,
+    gamlss, 
+    lme4, 
+    mgcv, 
+    bslib,
+    bsicons,
+    shinydashboard,
+    methods,
+    gamlss.dist,
+    invgamma,
+    ComBatFamily
+Remotes: andy1764/ComBatFamily
+Depends: 
+    R (>= 3.5.0)
+LazyData: true
+Suggests: knitr, rmarkdown, devtools, testthat, remotes
+VignetteBuilder: knitr
