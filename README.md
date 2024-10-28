@@ -14,7 +14,7 @@ To make the harmonization process more accessible to users from diverse backgrou
     -   Generates a residual dataset with unwanted covariate effects removed
 
 ## Diagram
-![ComBatFamQC Diagram](/figure/QC_diagram.png)
+![ComBatFamQC Diagram](/inst/figure/QC_diagram.png)
 
 ## Package Features
 
@@ -28,7 +28,7 @@ The ComBatFamQC package offers the following five key functionalities:
     -   Original ComBat (Johnson et al., 2007)
     -   Longitudinal ComBat (Beer et al., 2020)
     -   ComBat-GAM (Pomponio et al., 2020)
-    -   CovBat. (Chen et al., 2021)
+    -   CovBat (Chen et al., 2021)
 
 -   **Interactive Visualization through R Shiny**: The ComBatFamQC package comes with an interactive visualization tool built on R Shiny, providing an intuitive user interface to explore and evaluate batch effects, as well as conduct interactive harmonization if needed. The output is organized into multiple tabs, which includes:
 
