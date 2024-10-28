@@ -13,6 +13,8 @@ To make the harmonization process more accessible to users from diverse backgrou
     -   Visualizes age trends across brain structures over the lifespan
     -   Generates a residual dataset with unwanted covariate effects removed
 
+Note: Detailed information and tutorials can be found: https://zheng206.github.io/ComBatQC-Web/
+
 ## Diagram
 ![ComBatFamQC Diagram](/inst/figure/QC_diagram.png)
 

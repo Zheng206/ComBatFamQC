@@ -4,7 +4,7 @@ Version: 0.0.1
 Author: Zheng Ren
 Maintainer: Zheng Ren <zren1422@gmail.com>
 Description: Streamline interactive batch effect diagnostics, harmonization, and post-harmonization downstream analysis to greatly simplify the data harmonization process and improve transparency and reproducibility. 
-License: MIT + file LICENSE
+License: Artistic-2.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
