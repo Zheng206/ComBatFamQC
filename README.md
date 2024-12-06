@@ -16,7 +16,7 @@ To make the harmonization process more accessible to users from diverse backgrou
 Note: Detailed information and tutorials can be found: https://zheng206.github.io/ComBatQC-Web/
 
 ## Diagram
-![ComBatFamQC Diagram](/inst/figure/QC_diagram.png)
+![ComBatFamQC Diagram](/inst/figure/ComBatFamQC.png)
 
 ## Package Features
 
@@ -65,7 +65,7 @@ library(devtools)
 
 # Method 1: install ComBatFamily and ComBatFamQC seperatelly
 devtools::install_github("andy1764/ComBatFamily")
-devtools::install_github("Zheng206/ComBatFamQC")
+devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
 
 # Method 2: First, install ComBatFamQC without vignettes, then reinstall it with vignette building enabled.
 devtools::install_github("Zheng206/ComBatFamQC")
