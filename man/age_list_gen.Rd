@@ -36,10 +36,16 @@ age_list_gen(
 \value{
 \code{age_list_gen} returns a list containing the following components:
 \item{true_df}{a dataframe contains the true age and roi volume infomation}
-\item{predicted_df}{a dataframe contains the estimated age trend}
-\item{predicted_df_sex}{a dataframe contains the estimated age trend adjusting sex}
+\item{predicted_df_sex}{a dataframe contains the estimated age trend adjusting sex and icv}
+\item{model}{the fitted GAMLSS model}
 }
 \description{
 A GAMLSS model using a Box-Cox t distribution was fitted separately to rois of interest,
 to establish normative reference ranges as a function of age for the volume of a specific roi.
+}
+\examples{
+features <- colnames(age_df)[c(6:56)]
+sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
+colnames(sub_df) <- c("y", "age", "sex", "icv")
+age_list_gen(sub_df = sub_df)
 }

@@ -30,49 +30,52 @@
 #' \item{combat.object}{Saved ComBat model and relevant information, such as the batch variable name and whether the EB method is used}
 #' If `eb_check`  is set to be TRUE, then `combat_harm` will return a dataframe with the EB assumption test result.
 #'
-#' @import dplyr
-#' @import tidyverse
 #' @import ComBatFamily
 #' @importFrom stats formula
 #'
 #' @export
+#'
+#' @examples
+#' combat_harm(features = colnames(adni)[43:53], batch = "manufac",
+#' covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni,100), type = "lm")
+#'
 
-combat_harm = function(eb_check = FALSE, result = NULL, features = NULL, batch = NULL, covariates = NULL, df = NULL, type = "lm", random = NULL, smooth = NULL, interaction = NULL, smooth_int_type = NULL, family = "comfam", eb = TRUE, ref.batch = NULL, predict = FALSE, object = NULL, reference = NULL, out_ref_include = TRUE, ...){
-  info = data_prep(stage = "harmonization", result = result, features = features, batch = batch, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, predict = predict, object = object)
-  df = info$df
-  batch = info$batch
-  features = info$features
-  covariates = info$covariates
-  interaction = info$interaction
-  smooth = info$smooth
-  cov_shiny = info$cov_shiny
-  char_var = info$char_var
+combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch = NULL, covariates = NULL, df = NULL, type = "lm", random = NULL, smooth = NULL, interaction = NULL, smooth_int_type = NULL, family = "comfam", eb = TRUE, ref.batch = NULL, predict = FALSE, object = NULL, reference = NULL, out_ref_include = TRUE, ...){
+  info <- data_prep(stage = "harmonization", result = result, features = features, batch = batch, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, predict = predict, object = object)
+  df <- info$df
+  batch <- info$batch
+  features <- info$features
+  covariates <- info$covariates
+  interaction <- info$interaction
+  smooth <- info$smooth
+  cov_shiny <- info$cov_shiny
+  char_var <- info$char_var
 
   # Empirical Estimates
   if (is.null(covariates)){
     if(type == "lmer"){
-      form_c = NULL
-      combat_c = df[random]
+      form_c <- NULL
+      combat_c <- df[random]
     }else{
-      form_c = NULL
-      combat_c = NULL
+      form_c <- NULL
+      combat_c <- NULL
     }
   }else{
     if(type == "lmer"){
-      form_c = df[covariates]
-      combat_c = cbind(df[cov_shiny], df[random])
+      form_c <- df[covariates]
+      combat_c <- cbind(df[cov_shiny], df[random])
     }else{
-      form_c = df[covariates]
-      combat_c = df[cov_shiny]
+      form_c <- df[covariates]
+      combat_c <- df[cov_shiny]
     }
   }
   if(!eb_check){
     if (is.null(reference)){
       if (!predict){
         message("Starting first-time harmonization...")
-        form = form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
+        form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
         if(family == "comfam"){
-          ComBat_run = ComBatFamily::comfam(data = df[features],
+          ComBat_run <- ComBatFamily::comfam(data = df[features],
                                             bat = df[[batch]],
                                             covar = combat_c,
                                             model = eval(parse(text = type)),
@@ -81,7 +84,7 @@ combat_harm = function(eb_check = FALSE, result = NULL, features = NULL, batch =
                                             eb = eb,
                                             ...)
         }else{
-          ComBat_run = ComBatFamily::covfam(data = df[features],
+          ComBat_run <- ComBatFamily::covfam(data = df[features],
                                             bat = df[[batch]] ,
                                             covar = combat_c,
                                             model = eval(parse(text = type)),
@@ -92,55 +95,55 @@ combat_harm = function(eb_check = FALSE, result = NULL, features = NULL, batch =
         }
       }else{
         message("Starting out-of-sample harmonization using the saved ComBat Model...")
-        ComBat_run = predict(object = object$ComBat.model, newdata = df[features], newbat = df[[batch]], newcovar = combat_c, eb = object$eb, ...)
+        ComBat_run <- predict(object = object$ComBat.model, newdata = df[features], newbat = df[[batch]], newcovar = combat_c, eb = object$eb, ...)
       }
     }else{
       message("Starting out-of-sample harmonization using the reference dataset...")
-      reference[[batch]] = as.factor(reference[[batch]])
-      reference[char_var] =  lapply(reference[char_var], as.factor)
+      reference[[batch]] <- as.factor(reference[[batch]])
+      reference[char_var] <-  lapply(reference[char_var], as.factor)
       if(!is.null(random)){
         for (r in random){
-          reference[[r]] = as.factor(reference[[r]])
+          reference[[r]] <- as.factor(reference[[r]])
         }
       }
       ## check if reference data is included in the new data
-      other_info = setdiff(colnames(reference), features)
-      n_ref = df %>% semi_join(reference[other_info]) %>% nrow()
+      other_info <- setdiff(colnames(reference), features)
+      n_ref <- df %>% semi_join(reference[other_info]) %>% nrow()
       if(n_ref == nrow(reference)){
         message("The reference data is included in the new unharmonized dataset")
-        untouched = reference
-        untouched_included = reference %>% semi_join(df[other_info])
-        new_data = df %>% anti_join(reference[other_info])
+        untouched <- reference
+        untouched_included <- reference %>% semi_join(df[other_info])
+        new_data <- df %>% anti_join(reference[other_info])
       }else if(n_ref < nrow(reference) & n_ref > 0){
         message("The reference data is partially included in the new unharmonized dataset")
-        untouched = reference
-        untouched_included = reference %>% semi_join(df[other_info])
-        new_data = df %>% anti_join(reference[other_info])
+        untouched <- reference
+        untouched_included <- reference %>% semi_join(df[other_info])
+        new_data <- df %>% anti_join(reference[other_info])
       }else if(n_ref == 0){
         message("The reference data is separated from the new unharmonized dataset")
-        untouched = reference
-        untouched_included = NULL
-        new_data = df
+        untouched <- reference
+        untouched_included <- NULL
+        new_data <- df
       }
 
-      reference[[batch]] = "reference"
-      df_c = rbind(reference, new_data)
-      df_c[[batch]] = as.factor(df_c[[batch]])
+      reference[[batch]] <- "reference"
+      df_c <- rbind(reference, new_data)
+      df_c[[batch]] <- as.factor(df_c[[batch]])
       if (is.null(covariates)){
-        form_c = NULL
-        combat_c = NULL
+        form_c <- NULL
+        combat_c <- NULL
       }else{
         if(type == "lmer"){
-          form_c = df_c[covariates]
-          combat_c = cbind(df_c[cov_shiny], df_c[random])
+          form_c <- df_c[covariates]
+          combat_c <- cbind(df_c[cov_shiny], df_c[random])
         }else{
-          form_c = df_c[covariates]
-          combat_c = df_c[cov_shiny]
+          form_c <- df_c[covariates]
+          combat_c <- df_c[cov_shiny]
         }
       }
-      form = form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
+      form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
       if(family == "comfam"){
-        ComBat_run = ComBatFamily::comfam(data = df_c[features],
+        ComBat_run <- ComBatFamily::comfam(data = df_c[features],
                                           bat = df_c[[batch]],
                                           covar = combat_c,
                                           model = eval(parse(text = type)),
@@ -149,7 +152,7 @@ combat_harm = function(eb_check = FALSE, result = NULL, features = NULL, batch =
                                           eb = eb,
                                           ...)
       }else{
-        ComBat_run = ComBatFamily::covfam(data = df_c[features],
+        ComBat_run <- ComBatFamily::covfam(data = df_c[features],
                                           bat = df_c[[batch]] ,
                                           covar = combat_c,
                                           model = eval(parse(text = type)),
@@ -161,44 +164,44 @@ combat_harm = function(eb_check = FALSE, result = NULL, features = NULL, batch =
     }
 
     # Result
-    used_col = c(features, cov_shiny, batch)
-    other_col = setdiff(colnames(df), used_col)
-    other_info = df[other_col]
+    used_col <- c(features, cov_shiny, batch)
+    other_col <- setdiff(colnames(df), used_col)
+    other_info <- df[other_col]
 
     if (is.null(reference)){
       if(family == "covfam"){
-        com_family = "covfam"
-        comf_df = ComBat_run$dat.covbat
-        comf_df = cbind(other_info, df[batch], df[cov_shiny], comf_df)
+        com_family <- "covfam"
+        comf_df <- ComBat_run$dat.covbat
+        comf_df <- cbind(other_info, df[batch], df[cov_shiny], comf_df)
       }else{
-        com_family = "comfam"
-        comf_df = ComBat_run$dat.combat
-        comf_df = cbind(other_info, df[batch], df[cov_shiny], comf_df)
+        com_family <- "comfam"
+        comf_df <- ComBat_run$dat.combat
+        comf_df <- cbind(other_info, df[batch], df[cov_shiny], comf_df)
       }
     }else{
       if(family == "covfam"){
-        com_family = "covfam"
-        comf_df = ComBat_run$dat.covbat[(nrow(reference)+1):nrow(df_c),]
-        comf_df = cbind(new_data[other_col], new_data[batch], new_data[cov_shiny], comf_df)
-        comf_df = comf_df[colnames(df)]
-        comf_df = rbind(untouched_included, comf_df)
-        if(out_ref_include){comf_df = rbind(untouched, comf_df) %>% distinct()}
+        com_family <- "covfam"
+        comf_df <- ComBat_run$dat.covbat[(nrow(reference)+1):nrow(df_c),]
+        comf_df <- cbind(new_data[other_col], new_data[batch], new_data[cov_shiny], comf_df)
+        comf_df <- comf_df[colnames(df)]
+        comf_df <- rbind(untouched_included, comf_df)
+        if(out_ref_include){comf_df <- rbind(untouched, comf_df) %>% distinct()}
       }else{
-        com_family = "comfam"
-        comf_df = ComBat_run$dat.combat[(nrow(reference)+1):nrow(df_c),]
-        comf_df = cbind(new_data[other_col], new_data[batch], new_data[cov_shiny], comf_df)
-        comf_df = comf_df[colnames(df)]
-        comf_df = rbind(untouched_included, comf_df)
-        if(out_ref_include){comf_df = rbind(untouched, comf_df) %>% distinct()}
+        com_family <- "comfam"
+        comf_df <- ComBat_run$dat.combat[(nrow(reference)+1):nrow(df_c),]
+        comf_df <- cbind(new_data[other_col], new_data[batch], new_data[cov_shiny], comf_df)
+        comf_df <- comf_df[colnames(df)]
+        comf_df <- rbind(untouched_included, comf_df)
+        if(out_ref_include){comf_df <- rbind(untouched, comf_df) %>% distinct()}
       }
     }
-    comf_df = comf_df[colnames(df)]
-    combat_result =  list("com_family" = com_family, "harmonized_df" = comf_df, "combat.object" = list("ComBat.model" = ComBat_run, "batch.name" = batch, "eb" = eb))
+    comf_df <- comf_df[colnames(df)]
+    combat_result <-  list("com_family" = com_family, "harmonized_df" = comf_df, "combat.object" = list("ComBat.model" = ComBat_run, "batch.name" = batch, "eb" = eb))
     return(combat_result)
   }else{
     message("Starting Empirical Bayes assumption check...")
-    form = form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
-    eb_df = eb_check(data = df[features],
+    form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
+    eb_df <- eb_check(data = df[features],
              bat = df[[batch]],
              covar = combat_c,
              model = eval(parse(text = type)),

@@ -5,9 +5,9 @@
 \title{Post Harmonization Residual Generation}
 \usage{
 residual_gen(
-  type,
-  features,
-  covariates,
+  type = "lm",
+  features = NULL,
+  covariates = NULL,
   interaction = NULL,
   random = NULL,
   smooth = NULL,
@@ -53,4 +53,9 @@ residual_gen(
 }
 \description{
 Extract residuals after harmonization.
+}
+\examples{
+features <- colnames(adni)[43:53]
+residual_gen(type = "lm", features = features,
+covariates = c("AGE", "SEX", "DIAGNOSIS"), df = adni, rm = c("AGE", "SEX"), cores = 1)
 }

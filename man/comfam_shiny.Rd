@@ -4,15 +4,28 @@
 \alias{comfam_shiny}
 \title{Batch Effect Interactive Visualization}
 \usage{
-comfam_shiny(result, after = FALSE, ...)
+comfam_shiny(result, after = FALSE)
 }
 \arguments{
 \item{result}{A list derived from \code{visual_prep()} that contains datasets and statistical test results for Shiny visualization.}
 
 \item{after}{A boolean variable indicating whether the batch effect diagnostic occurs before or after harmonization. The default value is FALSE.}
-
-\item{...}{Additional arguments to \code{comfam} or \code{covfam} models.}
+}
+\value{
+This function does not return a value. It launches a Shiny app.
 }
 \description{
 Provide interactive batch/site effect visualization through Shiny app.
+}
+\details{
+When this function is called, it starts a Shiny application in the
+user's default web browser. Execution is blocked until the app is closed.
+}
+\examples{
+result_lm <- visual_prep(type = "lm", features = colnames(adni)[43:53],
+batch = "manufac", covariates = c("AGE", "SEX", "DIAGNOSIS"),
+df = head(adni, 500), cores = 2)
+\dontrun{
+comfam_shiny(result = result_lm)
+}
 }

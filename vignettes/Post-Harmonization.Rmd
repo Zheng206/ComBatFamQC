@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
 
 After harmonization, multiple-sites batch effect get controlled (or ideally eliminated). Some studies require further investigation of life span age trend of brain structures or other significant variable effects on brain structures. ComBatFamQC provides a post harmonization tool to:
 
+-   generate age trend estimation adjusting sex and icv: `age_list_gen`
 -   interactively visualize age trend: `age_shiny`
 -   generate residuals eliminating specific covariates' effects: `residual_gen`
     -   generate residuals from scratch
@@ -36,51 +37,69 @@ data(age_df)
 
 In this step, we need to generate a list of data sets for all rois. Each roi's data set contains four columns:
 
--   y: roi value
--   age: subject's age info
--   sex: subject's sex info
--   icv: subject's intracranial volume
+-   **roi.name**: roi value
+-   **age**: subject's age info
+-   **sex**: subject's sex info
+-   **icv**: subject's intracranial volume
 
 ```{r, eval = FALSE}
-age_df = data.frame(age_df)
-features = colnames(age_df)[c(6:56)]
-age = "age"
-sex = "sex"
-icv = "ICV_baseline"
-age_df[[sex]] = as.factor(age_df[[sex]])
+age_df <- data.frame(age_df)
+features <- colnames(age_df)[c(6:56)]
+age <- "age"
+sex <- "sex"
+icv <- "ICV_baseline"
+age_df[[sex]] <- as.factor(age_df[[sex]])
 ```
 
 ## Create a list of data sets for all rois
 
 ```{r, eval = FALSE}
 # Create sub_df for different features
-df_var = paste0("sub_df_", 1:length(features))
-for (i in 1:length(features)){
-  sub_df = age_df[,c(features[i], age, sex, icv)] %>% na.omit() 
-  colnames(sub_df) = c("y", "age", "sex", "icv")
-  assign(df_var[i], sub_df)
-}
+sub_df_list <- lapply(seq_len(length(features)), function(i){
+    sub_df <- df[,c(features[i], age, sex, icv)] %>% na.omit()
+    colnames(sub_df) <- c(features[i], "age", "sex", "icv")
+    return(sub_df)
+  })
 ```
 
-## Create age trend data sets for all rois
+## Create age trend estimation for all rois
 
 ```{r, eval = FALSE}
 # For MAC users
-age_list = mclapply(1:length(features), function(w){
-  age_sub = age_list_gen (sub_df = eval(parse(text = paste0("sub_df_",w))),  lq = 0.25, hq = 0.75)
+age_list <- mclapply(seq_len(length(features)), function(w){
+  age_sub <- age_list_gen (sub_df = sub_df_list[[w]],  lq = 0.25, hq = 0.75)
   return(age_sub)
 }, mc.cores = detectCores()) 
 
 # For Windows users
-age_list = mclapply(1:length(features), function(w){
-  age_sub = age_list_gen (sub_df = eval(parse(text = paste0("sub_df_",w))),  lq = 0.25, hq = 0.75)
+age_list <- mclapply(1:length(features), function(w){
+  age_sub <- age_list_gen (sub_df = sub_df_list[[w]],  lq = 0.25, hq = 0.75)
   return(age_sub)
 }, mc.cores = 1) 
 
-names(age_list) = features
+names(age_list) <- features
 
-quantile_type = c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 100*0.75))
+quantile_type <- c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 100*0.75))
+```
+
+## Launch Shiny App for Visualization
+
+```{r, eval=FALSE}
 ComBatFamQC::age_shiny(age_list, features, quantile_type)
+```
+
+## Save Age Trend Table and GAMLSS Model
+
+```{r, eval=FALSE}
+# Save age trend table
+age_save(path = "path/to/save", age_list = age_list)
+
+# Save GAMLSS Model
+gamlss_model <- lapply(seq_len(length(age_list)), function(i){
+        g_model <- age_list[[i]]$model
+        return(g_model)})
+names(gamlss_model) <- names(age_list)
+saveRDS(gamlss_model, file = "path/to/save/gamlss_model.rds")
 ```
 
 # Residual Generation
@@ -89,12 +108,12 @@ In this step, we would like to generate different sets of residuals removing spe
 
 ## Get harmonized data set
 ```{r, eval=FALSE}
-features = colnames(adni)[c(43:104)]
-covariates = c("timedays", "AGE", "SEX", "DIAGNOSIS")
-interaction = c("timedays,DIAGNOSIS")
-batch = "manufac"
-combat_model = combat_harm(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
-harmonized_df = combat_model$harmonized_df
+features <- colnames(adni)[c(43:104)]
+covariates <- c("timedays", "AGE", "SEX", "DIAGNOSIS")
+interaction <- c("timedays,DIAGNOSIS")
+batch <- "manufac"
+combat_model <- combat_harm(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
+harmonized_df <- combat_model$harmonized_df
 ```
 
 ## Generate residual data set
@@ -104,7 +123,7 @@ Specify parameters carefully based on regression type and which covariates' effe
 ### Generate residuals from scratch
 ```{r, eval=FALSE}
 # generate residuals by removing timedays and DIAGNOSIS effects, while preserving AGE and SEX effects.
-result_residual = residual_gen(type = "lm", features = features, covariates = covariates, interaction = interaction, smooth = NULL, df = harmonized_df, rm = c("timedays", "DIAGNOSIS"))
+result_residual <- residual_gen(type = "lm", features = features, covariates = covariates, interaction = interaction, smooth = NULL, df = harmonized_df, rm = c("timedays", "DIAGNOSIS"))
 
 # save residual data set
 write.csv(result_residual$residual, "path/to/save/residual.csv")
@@ -115,5 +134,8 @@ saveRDS(result_residual$model, "path/to/save/regression_model.rds")
 
 ### Generate residuals from existing model
 ```{r, eval=FALSE}
-result_residual = residual_gen(type = "lm", features = features, covariates = covariates, interaction = interaction, smooth = NULL, df = harmonized_df, rm = c("timedays", "DIAGNOSIS"), model = TRUE, model_path = "path/to/save/regression_model.rds")
+result_residual <- residual_gen(df = harmonized_df, rm = c("timedays", "DIAGNOSIS"), model = TRUE, model_path = "path/to/save/regression_model.rds")
+
+# save residual data set
+write.csv(result_residual$residual, "path/to/save/residual.csv")
 ```

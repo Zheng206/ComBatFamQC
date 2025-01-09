@@ -36,18 +36,20 @@ The ComBatFamQC includes the following harmonziation methods:
 
 # Set up
 
+
 Install the ComBatFamQC package and read in the data set to be harmonized. Adni data is used in the vignette for illustration. To be noticed, the data set should include at least the following columns:
 
--   batch column
--   feature columns (make sure univariate column is excluded)
--   covariate columns (essential for gam model)
--   random effect column (essential for lmer model)
+-   **batch** column
+-   **feature** columns (make sure univariate column is excluded)
+-   **covariate** columns (essential for **gam** model)
+-   **random effect** column (essential for **lmer** model)
 
-```{r setup}
+```{r setup, eval=FALSE}
 library(ComBatFamQC)
 library(dplyr)
 data(adni)
 ```
+
 
 # Interactive Batch Effect Diagnostics
 
@@ -62,34 +64,37 @@ Three types of regression models can be considered for batch effect evaluation:
 ## Linear Regression Model
 
 ```{r, eval=FALSE}
-features = colnames(adni)[c(43:104)]
-covariates = c("timedays", "AGE", "SEX", "DIAGNOSIS")
-interaction = c("timedays,DIAGNOSIS")
-batch = "manufac"
-result_orig = visual_prep(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
+features <- colnames(adni)[c(43:104)]
+covariates <- c("timedays", "AGE", "SEX", "DIAGNOSIS")
+interaction <- c("timedays,DIAGNOSIS")
+batch <- "manufac"
+result_orig <- visual_prep(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
 comfam_shiny(result_orig)
 ```
 
 ## Generalized additive Model
 
 ```{r, eval=FALSE}
-result_gam = visual_prep(type = "gam", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth_int_type = "linear", smooth = "AGE", df = adni)
+result_gam <- visual_prep(type = "gam", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth_int_type = "linear", smooth = "AGE", df = adni)
 comfam_shiny(result_gam)
 ```
 
 ## Linear Mixed-Effects Model
 
 ```{r, eval=FALSE}
-result_lmer = visual_prep(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni)
+result_lmer <- visual_prep(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni)
 comfam_shiny(result_lmer)
 ```
 
+
+
 # Harmonization Using default ComBatFamily Methods
+
 
 There are two types of harmonization scenarios users can choose from:
 
--   First-time Harmonization (Can also do interactive harmonization through Rshiny)
--   Out of Sample Harmonization
+-   **First-time Harmonization** (Can also do interactive harmonization through Rshiny)
+-   **Out of Sample Harmonization**
     -   predict from existing ComBat model (works only for **original ComBat** and **ComBat-GAM**)
     -   harmonize new data toward existing reference data (works for all built-in ComBat harmonization methods)
 
@@ -99,14 +104,14 @@ Specify parameters carefully based on the harmonization method to be applied.
 
 ### Original ComBat
 ```{r, eval=FALSE}
-features = colnames(adni)[c(43:104)]
-covariates = c("timedays", "AGE", "SEX", "DIAGNOSIS")
-interaction = c("timedays,DIAGNOSIS")
-batch = "manufac"
+features <- colnames(adni)[c(43:104)]
+covariates <- c("timedays", "AGE", "SEX", "DIAGNOSIS")
+interaction <- c("timedays,DIAGNOSIS")
+batch <- "manufac"
 ## Harmonize using evaluation results as the inputs
-combat_model = combat_harm(result = result_orig, type = "lm", interaction = interaction, smooth = NULL, random = NULL, df = adni)
+combat_model <- combat_harm(result = result_orig, type = "lm", interaction = interaction, smooth = NULL, random = NULL, df = adni)
 ## Harmonize through specifying features, batch, covariates and df arguments
-combat_model_copy = combat_harm(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
+combat_model_copy <- combat_harm(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
 ## Expect to get the same harmonization results
 identical(combat_model$harmonized_df, combat_model_copy$harmonized_df)
 
@@ -120,9 +125,9 @@ writeRDS(combat_model$combat.object, "path/to/save/combat_model.rds")
 ### Longitudinal ComBat
 ```{r, eval=FALSE}
 ## Harmonize using evaluation results as the inputs
-combat_model_lmer = combat_harm(result = result_lmer, type = "lmer", interaction = interaction, smooth = NULL, random = "subid", df = adni)
+combat_model_lmer <- combat_harm(result = result_lmer, type = "lmer", interaction = interaction, smooth = NULL, random = "subid", df = adni)
 ## Harmonize through specifying features, batch, covariates and df arguments
-combat_model_lmer_copy = combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni)
+combat_model_lmer_copy <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni)
 ## Expect to get the same harmonization results
 identical(combat_model_lmer$harmonized_df, combat_model_lmer_copy$harmonized_df)
 ```
@@ -130,9 +135,9 @@ identical(combat_model_lmer$harmonized_df, combat_model_lmer_copy$harmonized_df)
 ### ComBat-GAM
 ```{r, eval=FALSE}
 ## Harmonize using evaluation results as the inputs
-combat_model_gam = combat_harm(result = result_gam, type = "gam", interaction = interaction, smooth = "AGE", smooth_int_type = "linear", df = adni)
+combat_model_gam <- combat_harm(result = result_gam, type = "gam", interaction = interaction, smooth = "AGE", smooth_int_type = "linear", df = adni)
 ## Harmonize through specifying features, batch, covariates and df arguments
-combat_model_gam_copy = combat_harm(type = "gam", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = "AGE", smooth_int_type = "linear", df = adni)
+combat_model_gam_copy <- combat_harm(type = "gam", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = "AGE", smooth_int_type = "linear", df = adni)
 ## Expect to get the same harmonization results
 identical(combat_model_gam$harmonized_df, combat_model_gam_copy$harmonized_df)
 ```
@@ -140,9 +145,9 @@ identical(combat_model_gam$harmonized_df, combat_model_gam_copy$harmonized_df)
 ### CovBat
 ```{r, eval=FALSE}
 ## Harmonize using evaluation results as the inputs
-covbat_model = combat_harm(result = result_gam, type = "gam", interaction = interaction, smooth = "AGE", smooth_int_type = "linear", df = adni, family = "covfam")
+covbat_model <- combat_harm(result = result_gam, type = "gam", interaction = interaction, smooth = "AGE", smooth_int_type = "linear", df = adni, family = "covfam")
 ## Harmonize through specifying features, batch, covariates and df arguments
-covbat_model_copy = combat_harm(type = "gam", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth_int_type = "linear", smooth = "AGE", df = adni, family = "covfam")
+covbat_model_copy <- combat_harm(type = "gam", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth_int_type = "linear", smooth = "AGE", df = adni, family = "covfam")
 ## Expect to get the same harmonization results
 identical(covbat_model$harmonized_df, covbat_model_copy$harmonized_df)
 ```
@@ -154,8 +159,8 @@ identical(covbat_model$harmonized_df, covbat_model_copy$harmonized_df)
 Specify `predict` parameter to be TRUE and `object` parameter to be saved ComBat model.
 
 ```{r, eval=FALSE}
-saved_model = combat_model_gam$combat.object
-harm_predict = combat_harm(df = adni %>% head(1000), predict = TRUE, object = saved_model)
+saved_model <- combat_model_gam$combat.object
+harm_predict <- combat_harm(df = adni %>% head(1000), predict = TRUE, object = saved_model)
 ```
 
 ### from Reference Data
@@ -164,14 +169,14 @@ Specify `reference` parameter to be saved reference data. To be noticed, the ref
 
 ```{r, eval=FALSE}
 # harmonize reference data
-reference_site = adni %>% group_by(site) %>% summarize(count = n()) %>% arrange(desc(count)) %>% pull(site) %>% head(30)
-reference_df = adni %>% filter(site %in% reference_site)
-features = colnames(reference_df)[c(43:104)]
-covariates = c("timedays", "AGE", "SEX", "DIAGNOSIS")
-interaction = c("timedays,DIAGNOSIS")
-batch = "site"
-ref_model = combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = reference_df)
+reference_site <- adni %>% group_by(site) %>% summarize(count = n()) %>% arrange(desc(count)) %>% pull(site) %>% head(30)
+reference_df <- adni %>% filter(site %in% reference_site)
+features <- colnames(reference_df)[c(43:104)]
+covariates <- c("timedays", "AGE", "SEX", "DIAGNOSIS")
+interaction <- c("timedays,DIAGNOSIS")
+batch <- "site"
+ref_model <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = reference_df)
 
 # harmonize new data to the reference data
-harm_new = combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni, reference = ref_model$harmonized_df)
+harm_new <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni, reference = ref_model$harmonized_df)
 ```

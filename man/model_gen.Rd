@@ -2,13 +2,13 @@
 % Please edit documentation in R/Help_Func.R
 \name{model_gen}
 \alias{model_gen}
-\title{Model generations}
+\title{Model Generations}
 \usage{
 model_gen(
   y,
-  type,
-  batch,
-  covariates,
+  type = "lm",
+  batch = NULL,
+  covariates = NULL,
   interaction = NULL,
   random = NULL,
   smooth = NULL,
@@ -24,7 +24,7 @@ model_gen(
 
 \item{covariates}{Name of covariates supplied to \code{model}.}
 
-\item{interaction}{Expression of interaction terms supplied to \code{model} (eg: "age*diagnosis").}
+\item{interaction}{Expression of interaction terms supplied to \code{model} (eg: "age:diagnosis").}
 
 \item{random}{Variable name of a random effect in linear mixed effect model.}
 
@@ -37,4 +37,9 @@ A regression model object to be used for batch effect diagnostics and the post-h
 }
 \description{
 Generate appropriate regression models based on the model type and formula
+}
+\examples{
+model_gen(y = "thickness.left.caudal.anterior.cingulate", type = "lm",
+batch = "manufac", covariates = c("AGE", "SEX"), df = adni)
+
 }

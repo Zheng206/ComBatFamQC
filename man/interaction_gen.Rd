@@ -2,11 +2,11 @@
 % Please edit documentation in R/Help_Func.R
 \name{interaction_gen}
 \alias{interaction_gen}
-\title{Interaction term generation}
+\title{Interaction Term Generation}
 \usage{
 interaction_gen(
   type = "lm",
-  covariates,
+  covariates = NULL,
   smooth = NULL,
   interaction = NULL,
   smooth_int_type = NULL
@@ -33,4 +33,13 @@ interaction_gen(
 }
 \description{
 Generate appropriate interaction terms for regression models.
+}
+\examples{
+\dontrun{
+interaction_gen(type = "lm", covariates = c("AGE", "SEX", "DIAGNOSIS"),
+interaction = "AGE,DIAGNOSIS")
+
+interaction_gen(type = "gam", covariates = c("AGE", "SEX", "DIAGNOSIS"),
+smooth = "AGE", smooth_int_type = "linear", interaction = "AGE,DIAGNOSIS")
+}
 }

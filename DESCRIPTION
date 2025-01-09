@@ -1,17 +1,17 @@
 Package: ComBatFamQC
 Title: Harmonization QC visualization
 Version: 0.0.1
-Author: Zheng Ren
-Maintainer: Zheng Ren <zren1422@gmail.com>
+Authors@R: 
+    person("Zheng", "Ren", , "zren1422@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0006-2430-4625"))
 Description: Streamline interactive batch effect diagnostics, harmonization, and post-harmonization downstream analysis to greatly simplify the data harmonization process and improve transparency and reproducibility. 
-License: Artistic-2.0
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports: 
     tidyr,
     dplyr,
-    tidyverse,
+    magrittr,
     ggplot2,
     DT,
     shiny,
@@ -21,19 +21,26 @@ Imports:
     parallel,
     Rtsne,
     MDMR,
-    gamlss, 
-    lme4, 
-    mgcv, 
+    gamlss,
+    lme4,
+    mgcv,
     bslib,
-    bsicons,
     shinydashboard,
     methods,
     gamlss.dist,
     invgamma,
-    ComBatFamily
+    ComBatFamily,
+    openxlsx
 Remotes: andy1764/ComBatFamily
 Depends: 
     R (>= 3.5.0)
 LazyData: true
-Suggests: knitr, rmarkdown, devtools, testthat, remotes
+Suggests: 
+    knitr,
+    rmarkdown,
+    devtools,
+    testthat (>= 3.0.0),
+    remotes,
+    shinytest2
 VignetteBuilder: knitr
+Config/testthat/edition: 3

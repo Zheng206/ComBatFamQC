@@ -22,74 +22,81 @@
 #' \item{residual}{Residual dataframe}
 #'
 #'
-#' @import parallel
-#' @import dplyr
-#' @import tidyverse
-#' @importFrom broom tidy
-#' @importFrom mgcv gam
-#' @importFrom lme4 lmer
-#' @importFrom stats lm median model.matrix prcomp predict qnorm update var anova as.formula coef resid na.omit complete.cases
-#'
 #' @export
 #'
-#'
+#'@examples
+#'features <- colnames(adni)[43:53]
+#'residual_gen(type = "lm", features = features,
+#'covariates = c("AGE", "SEX", "DIAGNOSIS"), df = adni, rm = c("AGE", "SEX"), cores = 1)
 
-residual_gen = function(type, features, covariates, interaction = NULL, random = NULL, smooth = NULL, smooth_int_type = NULL, df, rm = NULL, model = FALSE, model_path = NULL, cores = detectCores()){
-  ## Characterize/factorize categorical variables
-  info = data_prep(stage = "residual", features = features, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type)
-  df = info$df
-  features = info$features
-  covariates = info$covariates
-  interaction = info$interaction
-  smooth = info$smooth
-  used_col = features
-  other_col = setdiff(colnames(df), used_col)
-  other_info = df[other_col]
+
+residual_gen <- function(type = "lm", features = NULL, covariates = NULL, interaction = NULL, random = NULL, smooth = NULL, smooth_int_type = NULL, df, rm = NULL, model = FALSE, model_path = NULL, cores = detectCores()){
 
   if(!model){
-    models = mclapply(features, function(y){
-      model = model_gen(y = y, type = type, batch = NULL, covariates = covariates, interaction = interaction, random = random, smooth = smooth, df = df)
+    ## Characterize/factorize categorical variables
+    if(is.null(features)) stop("Please identify the features required to generate residuals!")
+    info <- data_prep(stage = "residual", features = features, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type)
+    df <- info$df
+    features <- info$features
+    covariates <- info$covariates
+    interaction <- info$interaction
+    smooth <- info$smooth
+    used_col <- features
+    other_col <- setdiff(colnames(df), used_col)
+    other_info <- df[other_col]
+
+    models <- mclapply(features, function(y){
+      model <- model_gen(y = y, type = type, batch = NULL, covariates = covariates, interaction = interaction, random = random, smooth = smooth, df = df)
       return(model)
     }, mc.cores = cores)
   }else{
-    models = readRDS(model_path)
+    if(is.null(model_path)) stop("Please provide the path to the saved model!")
+    models <- readRDS(model_path)
+    info <- data_prep(stage = "residual", features = features, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, predict = TRUE, object = models)
+    df <- info$df
+    features <- info$features
+    covariates <- info$covariates
+    interaction <- info$interaction
+    smooth <- info$smooth
+    used_col <- features
+    other_col <- setdiff(colnames(df), used_col)
+    other_info <- df[other_col]
   }
 
   if(!is.null(rm)){
     if(type!="lmer"){
-      residuals = mclapply(1:length(features), function(i){
-        model_coef = coef(models[[i]])
-        rm_names = c()
+      residuals <- mclapply(1:length(features), function(i){
+        model_coef <- coef(models[[i]])
+        rm_names <- c()
         for (x in rm){
-          sub_name = names(model_coef)[which(grepl(x, names(model_coef)))]
-          rm_names = c(rm_names, sub_name)
+          sub_name <- names(model_coef)[which(grepl(x, names(model_coef)))]
+          rm_names <- c(rm_names, sub_name)
         }
-        rm_coef = model_coef[names(model_coef) %in% rm_names]
-        predict_y = model.matrix(models[[i]])[, which(grepl(paste0(names(rm_coef), collapse = "|"), colnames(model.matrix(models[[i]]))))] %*% t(t(unname(rm_coef)))
-        residual_y = df[[features[i]]] - predict_y
-        residual_y = data.frame(residual_y)
+        rm_coef <- model_coef[names(model_coef) %in% rm_names]
+        predict_y <- model.matrix(models[[i]])[, which(grepl(paste0(gsub("([.()])", "\\\\\\1", names(rm_coef)), collapse = "|"), colnames(model.matrix(models[[i]]))))] %*% t(t(unname(rm_coef)))
+        residual_y <- df[[features[i]]] - predict_y
+        residual_y <- data.frame(residual_y)
       }, mc.cores = cores) %>% bind_cols()
     }else{
-      df[[random]] = as.factor(df[[random]])
-      residuals = mclapply(1:length(features), function(i){
-        model_coef = coef(models[[i]])[[1]]
-        rm_names = c()
+      df[[random]] <- as.factor(df[[random]])
+      residuals <- mclapply(1:length(features), function(i){
+        model_coef <- coef(models[[i]])[[1]]
+        rm_names <- c()
         for (x in rm){
-          sub_name = names(model_coef)[which(grepl(x, names(model_coef)))]
-          rm_names = c(rm_names, sub_name)
+          sub_name <- names(model_coef)[which(grepl(x, names(model_coef)))]
+          rm_names <- c(rm_names, sub_name)
         }
-        rm_coef = model_coef[names(model_coef) %in% rm_names] %>% distinct()
-        predict_y = model.matrix(models[[i]])[, which(grepl(paste0(names(rm_coef), collapse = "|"), colnames(model.matrix(models[[i]]))))] %*% t(rm_coef)
-        residual_y = df[[features[i]]] - predict_y
-        residual_y = data.frame(residual_y)
+        rm_coef <- model_coef[names(model_coef) %in% rm_names] %>% distinct()
+        predict_y <- model.matrix(models[[i]])[, which(grepl(paste0(names(rm_coef), collapse = "|"), colnames(model.matrix(models[[i]]))))] %*% t(rm_coef)
+        residual_y <- df[[features[i]]] - predict_y
+        residual_y <- data.frame(residual_y)
       }, mc.cores = cores) %>% bind_cols()
     }
-    colnames(residuals) = features
-    residuals = cbind(other_info, residuals)
-    residuals = residuals[colnames(df)]
-  }else{residuals = df}
-  result = list("model" = models, "residual"= residuals)
+    colnames(residuals) <- features
+    residuals <- cbind(other_info, residuals)
+    residuals <- residuals[colnames(df)]
+  }else{residuals <- df}
+  result <- list("model" = models, "residual"= residuals)
   return(result)
 }
 
-#utils::globalVariables(c("features", "covariates", "intercept", "random"))

@@ -5,10 +5,10 @@
 \title{Batch Effect Diagnostic Visualization Preparation}
 \usage{
 visual_prep(
-  type,
+  type = "lm",
   features,
   batch,
-  covariates,
+  covariates = NULL,
   interaction = NULL,
   random = NULL,
   smooth = NULL,
@@ -63,4 +63,9 @@ visual_prep(
 }
 \description{
 Prepare relevant datasets and statistical test results for batch/site effect diagnostic visualization.
+}
+\examples{
+visual_prep(type = "lm", features = colnames(adni)[43:53], batch = "manufac",
+covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni, 500), cores = 2)
+
 }

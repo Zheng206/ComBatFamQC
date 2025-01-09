@@ -7,12 +7,29 @@
 age_shiny(age_list, features, quantile_type)
 }
 \arguments{
-\item{age_list}{A list contains all rois' true volumes and age trend estimates.}
+\item{age_list}{A list containing all ROIs' true volumes, age trend estimates, and the fitted GAMLSS model.}
 
 \item{features}{A vector of roi names.}
 
 \item{quantile_type}{A vector of quantile types.}
 }
+\value{
+This function does not return a value. It launches a Shiny app.
+}
 \description{
 Provide estimated lifespan age trends of neuroimaging-derived brain structures through shiny app.
+}
+\details{
+When this function is called, it starts a Shiny application in the
+user's default web browser. Execution is blocked until the app is closed.
+}
+\examples{
+features <- colnames(age_df)[c(6:56)]
+sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
+colnames(sub_df) <- c("y", "age", "sex", "icv")
+age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+quantile_type <- c("quantile_25", "median", "quantile_75")
+\dontrun{
+age_shiny(age_list = age_list, features = "Volume_1", quantile_type = quantile_type)
+}
 }

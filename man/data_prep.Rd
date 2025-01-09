@@ -55,3 +55,9 @@ data_prep(
 \description{
 Prepares the dataset for effective use in batch effect diagnostics, harmonization, and post-harmonization downstream analysis processes within the \code{ComBatFamQC} package.
 }
+\examples{
+data_prep(stage = "harmonization", result = NULL, features = colnames(adni)[43:53],
+batch = "manufac", covariates = "AGE", df = head(adni, 100), type = "lm", random = NULL,
+smooth = NULL, interaction = NULL, smooth_int_type = NULL, predict = FALSE, object = NULL)
+
+}

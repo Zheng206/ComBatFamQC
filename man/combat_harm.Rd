@@ -77,3 +77,8 @@ If \code{eb_check}  is set to be TRUE, then \code{combat_harm} will return a dat
 \description{
 Conduct harmonization using the techniques from the ComBatFamily package, which currently includes four types of harmonization methods: 1) Original ComBat, 2) Longitudinal ComBat, 3) ComBat-GAM, 4) CovBat.
 }
+\examples{
+combat_harm(features = colnames(adni)[43:53], batch = "manufac",
+covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni,100), type = "lm")
+
+}

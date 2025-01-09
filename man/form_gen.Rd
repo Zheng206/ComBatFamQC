@@ -2,16 +2,16 @@
 % Please edit documentation in R/Help_Func.R
 \name{form_gen}
 \alias{form_gen}
-\title{ComBatFamily model formula generations}
+\title{ComBatFamily Model Formula Generations}
 \usage{
-form_gen(x, c, i, random, smooth)
+form_gen(x, c = NULL, i = NULL, random = NULL, smooth = NULL)
 }
 \arguments{
 \item{x}{A model function name that is used or to be used in the ComBatFamily Package (eg: "lmer", "lm", "gam").}
 
-\item{c}{Data frame or matrix of covariates supplied to \code{model}}
+\item{c}{Data frame or matrix of covariates supplied to \code{model}.}
 
-\item{i}{Expression of interaction terms supplied to \code{model}, using comma to separate terms. (eg: "age,diagnosis").}
+\item{i}{Expression of interaction terms supplied to \code{model}. (eg: "age:diagnosis").}
 
 \item{random}{Variable name of a random effect in linear mixed effect model.}
 
@@ -22,4 +22,9 @@ A string of formula
 }
 \description{
 Generate appropriate formula for ComBatFamily models
+}
+\examples{
+covariates = adni[, c("AGE", "SEX")]
+form_gen(x = "lm", c = covariates)
+
 }

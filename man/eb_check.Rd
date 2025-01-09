@@ -40,3 +40,8 @@ biweight midvariance.}
 \description{
 Generate the empirical and prior distribution of both the location parameter \code{gamma} and the scale parameter \code{delta}.
 }
+\examples{
+eb_check(data = adni[1:500,43:53], bat = as.factor(adni$manufac[1:500]),
+covar = adni[1:500, c("AGE", "SEX")], model = lm, formula = y ~ AGE + SEX)
+
+}
