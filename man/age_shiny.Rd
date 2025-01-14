@@ -4,7 +4,7 @@
 \alias{age_shiny}
 \title{Lifespan Age Trends}
 \usage{
-age_shiny(age_list, features, quantile_type)
+age_shiny(age_list, features, quantile_type, use_plotly = TRUE)
 }
 \arguments{
 \item{age_list}{A list containing all ROIs' true volumes, age trend estimates, and the fitted GAMLSS model.}
@@ -12,6 +12,8 @@ age_shiny(age_list, features, quantile_type)
 \item{features}{A vector of roi names.}
 
 \item{quantile_type}{A vector of quantile types.}
+
+\item{use_plotly}{A boolean variable that indicates whether to display the age plot using the \code{plotly} package.}
 }
 \value{
 This function does not return a value. It launches a Shiny app.

@@ -1,0 +1,269 @@
+---
+title: "Batch Effect Diagnostics"
+format: 
+  html:
+    self-contained: true
+    title-block-banner: true
+    number-sections: true
+    page-layout: full
+    toc: true
+    toc-title: Contents
+    toc-location: left
+    code-fold: true
+    code-overflow: wrap
+    code-tools: true
+    theme: minty
+    cap-location: bottom
+params:
+  data: null    
+editor: visual
+date: "`r Sys.Date()`"
+execute:
+  error: false
+  warning: false
+  message: false
+  echo: false
+  results: asis
+  freeze: auto
+---
+
+```{r setup}
+#| include: false
+options(scipen=999)
+library(dplyr)
+library(magrittr)
+library(DT)
+library(ggplot2)
+```
+
+This report summarizes the key metrics and results from the interactive batch effect diagnostic session.
+
+::: {.callout-note collapse="true" icon="false"}
+## Key Diagnosis-Related Parameters
+
+**batch:** `r params$data$info$batch`
+
+**covariates:** `r paste0(params$data$info$cov_shiny, collapse = ",")`
+
+**model:** `r params$data$info$type`
+
+**smooth:** `r ifelse(is.null(params$data$info$smooth), "", paste0(params$data$info$smooth, collapse = ","))`
+
+**random:** `r ifelse(is.null(params$data$info$random), "", paste0(params$data$info$random, collapse = ","))`
+:::
+
+# Batch Variable Summary
+
+------------------------------------------------------------------------
+
+Below is a table summarizing the distribution of the batch variable, along with an indication of whether a batch level has been removed. Batch levels containing fewer than 3 observations will be removed.
+
+```{r batch summary}
+if (!is.null(params$data$info$summary_df)) {
+  dplyr::as_tibble(params$data$info$summary_df) %>% mutate(`percentage (%)` = sprintf("%.3f", .data[["percentage (%)"]])) %>% arrange(desc(.data[["remove"]])) %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle('remove', target = 'row', backgroundColor = styleEqual(c("removed"), "lightyellow"))
+} else {
+  "No data available for Batch Summary."
+}
+```
+
+# Global Batch Effect Diagnostics
+
+------------------------------------------------------------------------
+
+This section provides a qualitative visualization (T-SNE plot) and a quantitative statistical test (MDMR), if not skipped, illustrating whether a global batch effect exists.
+
+::: panel-tabset
+## T-SNE Plot
+
+```{r}
+#| fig-align: "center"
+#| fig-width: 10
+
+if (!is.null(params$data$tsne_df)) {
+  batch <- params$data$info$batch
+  tsne_df <- dplyr::as_tibble(params$data$tsne_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+  
+  ggplot(tsne_df, aes(x = as.numeric(.data[["cor_1"]]), y = as.numeric(.data[["cor_2"]]), color = as.factor(.data[[batch]]))) +
+         geom_point() +
+         labs(x = "Dim 1", y = "Dim 2", color = "Batch") +
+         theme(
+           axis.title.x = element_text(size = 12, face = "bold"),
+           axis.title.y = element_text(size = 12, face = "bold"),
+           axis.text.x = element_text(size = 12, face = "bold"),
+           axis.text.y = element_text(size = 12, face = "bold"),
+         )
+} else {
+  cat("No data available.")
+}
+
+```
+
+## MDMR
+
+```{r}
+if (!is.null(params$data$mdmr.summary)) {
+  mdmr <- as_tibble(params$data$mdmr.summary) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+  mdmr %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"), color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle('sig', target = 'row', backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available for MDMR Results.")
+}
+
+```
+
+```{r}
+if (!is.null(params$data$mdmr.summary)) {
+  if(mdmr$sig[2] != ".na.character"){
+    cat("There's a significant global batch effect based on the MDMR test.")
+  }else{
+    cat("There's no significant global batch effect based on the MDMR test.")
+  }
+}
+
+```
+:::
+
+# Individual Batch Effect Diagnostics
+
+------------------------------------------------------------------------
+
+This section provides several statistical tests illustrating whether individual batch effects exist, as well as the percentage of total individual batch effects.
+
+## Additive Batch Effect
+
+::: panel-tabset
+### ANOVA
+
+```{r}
+anova_test_df <- as_tibble(params$data$anova_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+n <- nrow(anova_test_df)
+if (n != 0) {
+  anova_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+          'sig',
+          target = 'row',
+          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available.")
+}
+```
+
+```{r}
+if (!is.null(params$data$anova_test_df)) {
+  pct <- 100 * (n - sum(anova_test_df$sig == ".na.character"))/n
+  cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
+}
+```
+
+### Kruskal-Wallis
+
+```{r}
+kw_test_df <- as_tibble(params$data$kw_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+n <- nrow(kw_test_df)
+if (n != 0 ) {
+  kw_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+          'sig',
+          target = 'row',
+          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available.")
+}
+```
+
+```{r}
+if (!is.null(params$data$kw_test_df)) {
+  pct <- 100 * (n - sum(kw_test_df$sig == ".na.character"))/n
+  cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
+}
+```
+
+### Kenward-Roger
+
+```{r}
+kr_test_df <- as_tibble(params$data$kr_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+n <- nrow(kr_test_df)
+if (n != 0) {
+  kr_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+          'sig',
+          target = 'row',
+          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available.")
+}
+```
+
+```{r}
+if (n != 0) {
+  pct <- 100 * (n - sum(kr_test_df$sig == ".na.character"))/n
+  cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
+}
+```
+:::
+
+## Multiplicative Batche Effect
+
+::: panel-tabset
+### Levene's Test
+
+```{r}
+lv_test_df <- as_tibble(params$data$lv_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+n <- nrow(lv_test_df)
+if (n != 0) {
+  lv_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+          'sig',
+          target = 'row',
+          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available.")
+}
+```
+
+```{r}
+if (!is.null(params$data$lv_test_df)) {
+  pct <- 100 * (n - sum(lv_test_df$sig == ".na.character"))/n
+  cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
+}
+```
+
+### Bartlett's Test
+
+```{r}
+bl_test_df <- as_tibble(params$data$bl_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+n <- nrow(bl_test_df)
+if (n != 0 ) {
+  bl_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+          'sig',
+          target = 'row',
+          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available.")
+}
+```
+
+```{r}
+if (!is.null(params$data$bl_test_df)) {
+  pct <- 100 * (n - sum(bl_test_df$sig == ".na.character"))/n
+  cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
+}
+```
+
+### Fligner-Killeen
+
+```{r}
+fk_test_df <- as_tibble(params$data$fk_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+n <- nrow(fk_test_df)
+if (n != 0) {
+  fk_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+          'sig',
+          target = 'row',
+          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+} else {
+  cat("No data available.")
+}
+```
+
+```{r}
+if (!is.null(params$data$fk_test_df)) {
+  pct <- 100 * (n - sum(fk_test_df$sig == ".na.character"))/n
+  cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
+}
+```
+:::

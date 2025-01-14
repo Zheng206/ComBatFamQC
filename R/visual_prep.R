@@ -39,7 +39,6 @@
 #' @import MDMR
 #' @importFrom broom tidy
 #' @importFrom mgcv gam anova.gam
-#' @importFrom gamlss gamlss
 #' @importFrom lme4 lmer
 #' @importFrom stats family lm median model.matrix prcomp predict qnorm update var anova as.formula coef dist fligner.test p.adjust resid na.omit bartlett.test kruskal.test
 #' @importFrom car leveneTest

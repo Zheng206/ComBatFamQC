@@ -32,6 +32,7 @@ p <- add_argument(p, "--model.path", help = "path to the existing model", defaul
 p <- add_argument(p, "--outdir", short = '-o', help = "full path (including the file name) where residual data should be written, or the directory path to save the age trend table.")
 p <- add_argument(p, "--mout", help = "full path where regression models to be saved")
 p <- add_argument(p, "--cores", help = "number of cores used for paralleling computing, please provide a numeric value", default = "all")
+p <- add_argument(p, "--plotly", help = "a boolean variable indicating whether to use plotly package for age trend visualization.", default = TRUE)
 argv <- parse_args(p)
 
 # Preprocess inputs
@@ -112,7 +113,7 @@ if(argv$type == "age_trend"){
   quantile_type <- c(paste0("quantile_", 100*as.numeric(argv$lowerquantile)), "median", paste0("quantile_", 100*as.numeric(argv$upperquantile)))
 
   if(argv$visualization){
-    ComBatFamQC::age_shiny(age_list, features, quantile_type)
+    ComBatFamQC::age_shiny(age_list, features, quantile_type, use_plotly = argv$plotly)
   }else{
     age_save(path = argv$outdir, age_list = age_list)
     if(!is.na(argv$mout)) {

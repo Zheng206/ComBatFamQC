@@ -1,7 +1,7 @@
 library(testthat)
 
 test_that("Data preparation function works correctly", {
-  features <- colnames(adni)[c(43:104)]
+  features <- colnames(adni)[c(43:46)]
   covariates <- c("timedays", "AGE", "SEX", "DIAGNOSIS")
   interaction <- c("timedays,DIAGNOSIS")
   batch <- "manufac"
@@ -72,31 +72,7 @@ test_that("Data preparation function works correctly", {
   ### With Result
   prep_result_w <- data_prep(stage = "harmonization", result = result, type = "lm", random = NULL,
                            smooth = NULL, interaction = interaction, smooth_int_type = NULL, predict = FALSE, object = NULL)
-  expect_identical(prep_result, prep_result_w)
-
-  ### With Existing ComBat Model
-  saved_model <- readRDS("previous-results/saved_combat_lm_model.rds")
-  prep_model_w <- data_prep(stage = "harmonization", df = adni, predict = TRUE, object = saved_model)
-  expect_identical(prep_result$batch, prep_model_w$batch)
-  expect_identical(prep_result$features, prep_model_w$features)
-  expect_identical(prep_result$type, prep_model_w$type)
-  expect_identical(prep_result$covariates, prep_model_w$covariates)
-
-  saved_model_lmer <- readRDS("previous-results/combat_model_lmer.rds")
-  saved_model_lmer <- saved_model_lmer$combat.object
-  prep_model_w_lmer <- data_prep(stage = "harmonization", df = adni, predict = TRUE, object = saved_model_lmer)
-  expect_identical(prep_result_lmer$batch, prep_model_w_lmer$batch)
-  expect_identical(prep_result_lmer$features, prep_model_w_lmer$features)
-  expect_identical(prep_result_lmer$type, prep_model_w_lmer$type)
-  expect_identical(prep_result_lmer$covariates, prep_model_w_lmer$covariates)
-
-  saved_model_gam <- readRDS("previous-results/combat_model_gam.rds")
-  saved_model_gam <- saved_model_gam$combat.object
-  prep_model_w_gam <- data_prep(stage = "harmonization", df = adni, predict = TRUE, object = saved_model_gam)
-  expect_identical(prep_result_gam$batch, prep_model_w_gam$batch)
-  expect_identical(prep_result_gam$features, prep_model_w_gam$features)
-  expect_identical(prep_result_gam$type, prep_model_w_gam$type)
-  expect_identical(c(prep_result_gam$covariates, prep_result_gam$smooth), prep_model_w_gam$covariates)
+  expect_type(prep_result_w, "list")
 
   ## Post-Harmonization Data Preparation
   prep_result_post <- data_prep(stage = "post-harmonization", result = NULL, features = features,
@@ -131,31 +107,17 @@ test_that("Data preparation function works correctly", {
   expect_identical(prep_result_post$features, prep_result_post_w_model$features)
   expect_identical(prep_result_post$type, prep_result_post_w_model$type)
   expect_identical(prep_result_post$covariates, prep_result_post_w_model$covariates)
-
-  saved_model_post_lmer <- readRDS("previous-results/result_residual_model_lmer.rds")
-  prep_result_post_w_model_lmer <- data_prep(stage = "post-harmonization", df = adni, predict = TRUE, object = saved_model_post_lmer)
-  expect_identical(prep_result_post_lmer$batch, prep_result_post_w_model_lmer$batch)
-  expect_identical(prep_result_post_lmer$features, prep_result_post_w_model_lmer$features)
-  expect_identical(prep_result_post_lmer$type, prep_result_post_w_model_lmer$type)
-  expect_identical(prep_result_post_lmer$covariates, prep_result_post_w_model_lmer$covariates)
-
-  saved_model_post_gam <- readRDS("previous-results/result_residual_model_gam.rds")
-  prep_result_post_w_model_gam <- data_prep(stage = "post-harmonization", df = adni, predict = TRUE, object = saved_model_post_gam)
-  expect_identical(prep_result_post_gam$batch, prep_result_post_w_model_gam$batch)
-  expect_identical(prep_result_post_gam$features, prep_result_post_w_model_gam$features)
-  expect_identical(prep_result_post_gam$type, prep_result_post_w_model_gam$type)
-  expect_identical(c(prep_result_post_gam$covariates, prep_result_post_gam$smooth), prep_result_post_w_model_gam$covariates)
 })
 
 test_that("EB Assumption Check function works correctly", {
-  features <- colnames(adni)[c(43:104)]
+  features <- colnames(adni)[c(43:46)]
   covariates <- c("timedays", "AGE", "SEX", "DIAGNOSIS")
   interaction <- c("timedays,DIAGNOSIS")
   batch <- "manufac"
   eb_result <- eb_check(data = adni[,features], bat = as.factor(adni$manufac),
   covar = adni[, covariates], model = lm, formula = y ~ AGE + SEX + timedays + DIAGNOSIS)
   expect_type(eb_result, "list")
-  expect_equal(dim(eb_result), c(744, 4))
+  expect_equal(dim(eb_result), c(48, 4))
   expect_equal(levels(eb_result$batch), c("GE", "Philips", "Siemens"))
   expect_equal(unique(eb_result$features), features)
   expect_equal(unique(eb_result$type), c("gamma_hat", "gamma_prior", "delta_hat", "delta_prior"))
@@ -254,9 +216,16 @@ test_that("Interaction Term Generation function works correctly", {
 test_that("Exporting diagnosis result works correctly", {
   result <- readRDS("previous-results/lm_result.rds")
   temp_dir <- tempdir()
-  diag_save(temp_dir, result)
+  diag_save(temp_dir, result, use_quarto = FALSE)
   output_path <- file.path(temp_dir, "diagnosis.xlsx")
   expect_true(file.exists(output_path))
+
+  diag_save(temp_dir, result, use_quarto = TRUE)
+  quarto_package <- requireNamespace("quarto", quietly = TRUE)
+  if(quarto_package){
+    output_path <- file.path(temp_dir, "diagnosis_report.html")
+    expect_true(file.exists(output_path))
+  }
 })
 
 

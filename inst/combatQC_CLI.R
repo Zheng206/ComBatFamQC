@@ -12,7 +12,7 @@ suppressMessages(library(parallel))
 p <- arg_parser("Streamline interactive batch effect diagnostics and apply ComBat harmonization", hide.opts = FALSE)
 p <- add_argument(p, "data", help = "path to the CSV or EXCEL file that contains data to be harmonized, covariates and batch information")
 p <- add_argument(p, "--diagnosis", short = '-d', help = "a boolean variable indicating whether to run harmonization or batch effect diagnosis. TRUE indicates batch effect diagnosis.", default = TRUE)
-p <- add_argument(p, "--visualization", short = '-v', help = "a boolean variable indicating whether to start the Shiny app or save only the diagnosis result. TRUE indicates that the Shiny app will be started. False indicates that the diagnosis result will be saved to an Excel file.", default = TRUE)
+p <- add_argument(p, "--visualization", short = '-v', help = "a boolean variable indicating whether to start the Shiny app or save only the diagnosis result. TRUE indicates that the Shiny app will be started. False indicates that the diagnosis result will be exported to an EXCEL file or a quarto report.", default = TRUE)
 p <- add_argument(p, "--after", short = '-a', help = "a boolean variable indicating whether the dataset is before or after harmonization. TRUE indicates the dataset is after harmonization.", default = FALSE)
 p <- add_argument(p, "--family", short = '-f', help = "combat family to use, comfam or covfam", default = "comfam")
 p <- add_argument(p, "--features", help = "position of data to be harmonized(column numbers), eg: 1-5,9")
@@ -38,6 +38,7 @@ p <- add_argument(p, "--outdir", short = '-o', help = "full path (including the 
 p <- add_argument(p, "--mout", help = "full path where ComBat model to be saved")
 p <- add_argument(p, "--cores", help = "number of cores used for paralleling computing, please provide a numeric value", default = "all")
 p <- add_argument(p, "--mdmr", help = "a boolean variable indicating whether to run the MDMR test.", default = TRUE)
+p <- add_argument(p, "--quarto", help = "a boolean variable indicating whether to export a quarto report.", default = TRUE)
 argv <- parse_args(p)
 
 # Preprocess inputs
@@ -191,7 +192,7 @@ if(argv$diagnosis){
     message("Datasets are ready! Starting shiny app......")
     comfam_shiny(result, argv$after)
   }else{
-    diag_save(path = argv$outdir, result = result)
+    diag_save(path = argv$outdir, result = result, use_quarto = argv$quarto)
   }
 
 }else{

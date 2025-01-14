@@ -320,26 +320,9 @@ comfam_shiny <- function(result, after = FALSE){
 
     output$batch_vi <- shiny::renderPlot({
       if(input$num_var_control_batch == "No"){
-        ggplot(df, aes(x = .data[[input$single_feature]])) +
-          geom_density(fill = "blue", alpha = 0.3) +
-          labs(x = input$single_feature) +
-          theme(
-            axis.title.x = element_text(size = 12, face = "bold"),
-            axis.title.y = element_text(size = 12, face = "bold"),
-            axis.text.x = element_text(size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-          )
+        combat_plot_gen(result, f = input$single_feature, batch_control = "No", plot_name = "batch_density")
       }else{
-        overview_sub_df <- df %>% filter(.data[[batch]] %in% input$overview_batch_select)
-        ggplot(overview_sub_df, aes(x = .data[[input$single_feature]], fill = .data[[batch]])) +
-          geom_density(alpha = 0.3) +
-          labs(x = input$single_feature, fill = batch) +
-          theme(
-            axis.title.x = element_text(size = 12, face = "bold"),
-            axis.title.y = element_text(size = 12, face = "bold"),
-            axis.text.x = element_text(size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-          )
+        combat_plot_gen(result, f = input$single_feature, batch_control = "Yes", batch_level = input$overview_batch_select, plot_name = "batch_density")
       }
     })
 
@@ -347,93 +330,26 @@ comfam_shiny <- function(result, after = FALSE){
       if (!is.null(covariates)){
         if(input$single_cov %in% num_var){
           if(input$num_var_control_batch == "No"){
-            ggplot(df, aes(x = .data[[input$single_cov]], y = .data[[input$single_feature]])) +
-              geom_point() +
-              geom_smooth(method = input$num_var_control, alpha = as.numeric(input$se)) +
-              labs(x = input$single_cov, y = input$single_feature) +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, f = input$single_feature, batch_control = "No", plot_name = "cov_feature", c = input$single_cov, smooth_method = input$num_var_control, alpha = input$se)
           }else{
-            overview_sub_df <- df %>% filter(.data[[batch]] %in% input$overview_batch_select)
-            ggplot(overview_sub_df, aes(x = .data[[input$single_cov]], y = .data[[input$single_feature]], color = .data[[batch]])) +
-              geom_point() +
-              geom_smooth(method = input$num_var_control, aes(fill = .data[[batch]]), alpha = as.numeric(input$se)) +
-              labs(x = input$single_cov, y = input$single_feature, color = batch, fill = batch) +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, f = input$single_feature, batch_control = "Yes", batch_level = input$overview_batch_select, plot_name = "cov_feature", c = input$single_cov, smooth_method = input$num_var_control, alpha = input$se)
           }
         }else if(input$single_cov %in% char_var){
           if(input$char_var_control == "boxplot"){
             if(input$num_var_control_batch == "No"){
-              ggplot(df, aes(x = .data[[input$single_cov]], y = .data[[input$single_feature]], fill = .data[[input$single_cov]])) +
-                geom_boxplot() +
-                scale_fill_brewer(palette="Pastel1") +
-                labs(x = input$single_cov, y = input$single_feature, fill = input$single_cov) +
-                theme(
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.x = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold"),
-                )
+              combat_plot_gen(result, f = input$single_feature, batch_control = "No", plot_name = "cov_feature", c = input$single_cov, char_plot_type = "boxplot")
 
             }else{
-              overview_sub_df <- df %>% filter(.data[[batch]] %in% input$overview_batch_select)
-              ggplot(overview_sub_df, aes(x = .data[[input$single_cov]], y = .data[[input$single_feature]], fill = .data[[batch]])) +
-                geom_boxplot() +
-                scale_fill_brewer(palette="Pastel1") +
-                labs(x = input$single_cov, y = input$single_feature, fill = batch) +
-                theme(
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.x = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold"),
-                )
+              combat_plot_gen(result, f = input$single_feature, batch_control = "Yes", batch_level = input$overview_batch_select, plot_name = "cov_feature", c = input$single_cov, char_plot_type = "boxplot")
             }
           }else if(input$char_var_control == "boxplot with points"){
             if(input$num_var_control_batch == "No"){
-              ggplot(df, aes(x = .data[[input$single_cov]], y = .data[[input$single_feature]], fill = .data[[input$single_cov]])) +
-                geom_boxplot() +
-                geom_jitter(aes(shape = .data[[input$single_cov]])) +
-                scale_fill_brewer(palette="Pastel1") +
-                labs(x = input$single_cov, y = input$single_feature, fill = input$single_cov, shape = input$single_cov) +
-                theme(
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.x = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold"),
-                )
+              combat_plot_gen(result, f = input$single_feature, batch_control = "No", plot_name = "cov_feature", c = input$single_cov, char_plot_type = "boxplot with points")
             }else{
-              overview_sub_df <- df %>% filter(.data[[batch]] %in% input$overview_batch_select)
-              ggplot(overview_sub_df, aes(x = .data[[input$single_cov]], y = .data[[input$single_feature]], fill = .data[[batch]])) +
-                geom_boxplot() +
-                geom_jitter(aes(shape = .data[[input$single_cov]])) +
-                scale_fill_brewer(palette="Pastel1") +
-                labs(x = input$single_cov, y = input$single_feature, fill = batch, shape = input$single_cov) +
-                theme(
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.x = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold"),
-                )
+              combat_plot_gen(result, f = input$single_feature, batch_control = "Yes", batch_level = input$overview_batch_select, plot_name = "cov_feature", c = input$single_cov, char_plot_type = "boxplot with points")
             }
           }else if(input$char_var_control == "density plot"){
-            ggplot(df, aes(x = .data[[input$single_feature]], fill = .data[[input$single_cov]])) +
-              geom_density(alpha = 0.3) +
-              labs(x = input$single_feature, fill = input$single_cov) +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, f = input$single_feature, batch_control = "No", plot_name = "cov_feature", c = input$single_cov, char_plot_type = "density plot")
           }
         }
       }
@@ -449,32 +365,10 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     output$data_frame <- DT::renderDT({
-      other <- setdiff(colnames(df), c(batch, covariates, features))
-      df_show <- df[c(batch, covariates, features, other)]
       if(input$data_view == "Exploratory Analysis"){
-        df_show %>% dplyr::select(all_of(c(batch, covariates, input$single_feature))) %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                                   targets = "_all")))) %>% formatStyle(
-                                                                                                                                     covariates,
-                                                                                                                                     backgroundColor = "pink"
-                                                                                                                                   ) %>% formatStyle(
-                                                                                                                                     input$single_feature,
-                                                                                                                                     backgroundColor = "lightyellow"
-                                                                                                                                   ) %>% formatStyle(
-                                                                                                                                     batch,
-                                                                                                                                     backgroundColor = "lightblue"
-                                                                                                                                   )
+        combat_table_gen(result, table_name = "exploratory_analysis", f = input$single_feature)
       }else{
-        df_show %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                        targets = "_all")))) %>% formatStyle(
-                                                                          covariates,
-                                                                          backgroundColor = "pink"
-                                                                        ) %>% formatStyle(
-                                                                          features,
-                                                                          backgroundColor = "lightyellow"
-                                                                        ) %>% formatStyle(
-                                                                          batch,
-                                                                          backgroundColor = "lightblue"
-                                                                        )
+        combat_table_gen(result, table_name = "data_overview")
       }
     })
 
@@ -499,26 +393,10 @@ comfam_shiny <- function(result, after = FALSE){
       }
     })
     output$plot <- shiny::renderPlot({
-      add_plot <- ggplot(info$summary_df %>% filter(remove == "keeped"), aes(x = .data[["count"]], y = .data[[batch]])) +
-        geom_bar(stat = "identity", fill = "aquamarine") +
-        #geom_text(aes(label = count), hjust = 1.5, position = position_dodge(0.9), size = 3, colour = "black") +
-        labs(x = "Count", y = "Batch") +
-        theme(#plot.title = element_text(hjust = 0.5),
-          axis.title.x = element_text(size = 12, face = "bold"),
-          axis.title.y = element_text(size = 12, face = "bold"),
-          axis.text.x = element_text(size = 12, face = "bold"),
-          axis.text.y = element_text(size = 12, face = "bold"),
-          axis.ticks.y = element_blank())
-      if(input$text_status == "No"){add_plot}else{add_plot + geom_text(aes(label = .data[["count"]]), hjust = -0.5, position = position_dodge(0.9), size = 5, colour = "black")}
+      if(input$text_status == "No"){combat_plot_gen(result, plot_name = "batch_summary")}else{combat_plot_gen(result, plot_name = "batch_summary", text_status = "Yes")}
     })
     output$table <- DT::renderDT({
-      info$summary_df %>% mutate(`percentage (%)` = sprintf("%.3f", .data[["percentage (%)"]])) %>% arrange(desc(.data[["remove"]])) %>%
-        DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                            targets = "_all")))) %>% formatStyle(
-                                                              'remove',
-                                                              target = 'row',
-                                                              backgroundColor = styleEqual(c("removed"), "lightyellow")
-                                                            )
+      combat_table_gen(result, table_name = "summary_df")
     })
     output$cov_output <- shiny::renderUI({
       if (is.null(covariates)){
@@ -536,55 +414,11 @@ comfam_shiny <- function(result, after = FALSE){
 
     output$cov_plot <- shiny::renderPlot({
       if (!is.null(covariates)){
-        if(input$cov %in% num_var){
-          ggplot(df, aes(x = .data[[input$cov]], y = reorder(as.factor(.data[[batch]]), .data[[input$cov]], Fun = median), fill = .data[[batch]])) +
-            geom_boxplot(alpha = 0.3) +
-            #geom_point() +
-            labs(x = input$cov, y = "Batch", fill = "Covariate") +
-            theme(#plot.title = element_text(hjust = 0.5),
-              legend.position = "none",
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-              #axis.text.y = element_blank(),
-              axis.ticks.y = element_blank())
-        }else if(input$cov %in% char_var){
-          df_c <- df %>% group_by(.data[[batch]], .data[[input$cov]]) %>% dplyr::tally() %>% mutate(percentage = .data[["n"]]/sum(.data[["n"]]))
-          colnames(df_c) <- c(batch, input$cov, "n", "percentage")
-          add_plot <- ggplot(df_c, aes(y = as.factor(.data[[batch]]), x = .data[["n"]], fill = .data[[input$cov]])) +
-            geom_bar(stat="identity", position ="fill") +
-            #geom_text(aes(label = paste0(sprintf("%1.1f", percentage*100),"%")), position = position_fill(vjust=0.5), colour="black", size = 3) +
-            scale_fill_brewer(palette = "Pastel1") +
-            labs(x = "Percentage", y = "Batch", fill = input$cov) +
-            theme(#plot.title = element_text(hjust = 0.5),
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-              #axis.text.y = element_blank(),
-              axis.ticks.y = element_blank())
-          if(input$text_status == "No"){add_plot}else{add_plot + geom_text(aes(label = paste0(sprintf("%1.1f", .data[["percentage"]]*100),"%")), position = position_fill(vjust=0.5), colour="black", size = 5)}
-        }
+        if(input$text_status == "No"){combat_plot_gen(result, plot_name = "cov_distribution", c = input$cov)}else{combat_plot_gen(result, plot_name = "cov_distribution", c = input$cov, text_status = "Yes")}
       }
     })
     output$cov_table <-  DT::renderDT({
-      if (!is.null(covariates)){
-        if(input$cov %in% num_var){
-          cov_summary_table <- df %>% group_by(.data[[batch]]) %>% summarize(min = min(.data[[input$cov]]), mean = mean(.data[[input$cov]]), max = max(.data[[input$cov]]))
-          colnames(cov_summary_table) <- c(batch, "min", "mean", "max")
-          cov_summary_table <- cov_summary_table %>% mutate(mean = sprintf("%.3f", .data[["mean"]]),
-                                                            min = sprintf("%.3f", .data[["min"]]),
-                                                            max = sprintf("%.3f", .data[["max"]]))
-          cov_summary_table %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                    targets = "_all"))))
-        }else if(input$cov %in% char_var){
-          cov_summary_table <- df %>% group_by(.data[[batch]], .data[[input$cov]]) %>% dplyr::tally() %>% mutate(percentage = 100*.data[["n"]]/sum(.data[["n"]]))
-          colnames(cov_summary_table) <- c(batch, input$cov, "n", "percentage (%)")
-          cov_summary_table %>% mutate(`percentage (%)` = sprintf("%.3f", .data[["percentage (%)"]])) %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                                                              targets = "_all"))))
-        }
-      }
+      combat_table_gen(result, table_name = "cov_table", c = input$cov)
     })
 
     ############### Residual Plot #############################
@@ -604,85 +438,34 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     output$res_add <- shiny::renderPlot({
-      add_mean <- result$residual_add_df %>% group_by(result$residual_add_df[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
-      colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
-      result$residual_add_df <- result$residual_add_df %>% left_join(add_mean, by = c(batch))
       if(input$resid_color == "No"){
-
         if(input$resid_all == "Yes"){
-          add_plot <- ggplot(result$residual_add_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]])) +
-            geom_boxplot() +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_add", color = "No", label = "No")
+            }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_add", color = "No", label = "Yes", angle = input$label_angle)
+          }
         }else{
-          sub_plot_df <- result$residual_add_df %>% filter(.data[[batch]] %in% input$resid_batch_select)
-          add_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]])) +
-            geom_boxplot() +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_add", color = "No", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_add", color = "No", label = "Yes", angle = input$label_angle)
+          }
         }
-
-        if(input$resid_label == "No"){
-          add_plot +
-            theme(axis.text.x = element_blank(),
-                  axis.ticks.x = element_blank())
-        }else{
-          add_plot +
-            theme(axis.text.x = element_text(angle = input$label_angle, hjust = 0.5, size = 12, face = "bold"),
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold")
-            )
-        }
-
       }else{
-
         if(input$resid_all == "Yes"){
-          add_plot <- ggplot(result$residual_add_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]], fill = .data[[batch]])) +
-            geom_boxplot(alpha = 0.3) +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual")
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_add", color = "Yes", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_add", color = "Yes", label = "Yes", angle = input$label_angle)
+          }
         }else{
-          sub_plot_df <- result$residual_add_df %>% filter(.data[[batch]] %in% input$resid_batch_select)
-          add_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]], fill = .data[[batch]])) +
-            geom_boxplot(alpha = 0.3) +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_add", color = "Yes", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_add", color = "Yes", label = "Yes", angle = input$label_angle)
+          }
         }
-
-        if(input$resid_label == "No"){
-          add_plot +
-            theme(axis.text.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  legend.position = "none")
-        }else{
-          add_plot +
-            theme(axis.text.x = element_text(angle = input$label_angle, hjust = 0.5, size = 12, face = "bold"),
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold"),
-                  legend.position = "none"
-            )
-        }
-
       }
     })
 
@@ -691,97 +474,40 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     output$res_ml <- shiny::renderPlot({
-      add_mean <- result$residual_add_df %>% group_by(result$residual_add_df[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
-      colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
-      result$residual_ml_df <- result$residual_ml_df %>% left_join(add_mean, by = c(batch))
       if(input$resid_color == "No"){
-
         if(input$resid_all == "Yes"){
-          mul_plot <- ggplot(result$residual_ml_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]])) +
-            geom_boxplot() +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_mul", color = "No", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_mul", color = "No", label = "Yes", angle = input$label_angle)
+          }
         }else{
-          sub_plot_df <- result$residual_ml_df %>% filter(.data[[batch]] %in% input$resid_batch_select)
-          mul_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]])) +
-            geom_boxplot() +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
-        }
-        if(input$resid_label == "No"){
-          mul_plot +
-            theme(axis.text.x = element_blank(),
-                  axis.ticks.x = element_blank())
-        }else{
-          mul_plot +
-            theme(axis.text.x = element_text(angle = input$label_angle, hjust = 0.5, size = 12, face = "bold"),
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold")
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_mul", color = "No", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_mul", color = "No", label = "Yes", angle = input$label_angle)
+          }
         }
       }else{
         if(input$resid_all == "Yes"){
-          mul_plot <- ggplot(result$residual_ml_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]], fill = .data[[batch]])) +
-            geom_boxplot(alpha = 0.3) +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_mul", color = "Yes", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "No", plot_name = "resid_mul", color = "Yes", label = "Yes", angle = input$label_angle)
+          }
         }else{
-          sub_plot_df <- result$residual_ml_df %>% filter(.data[[batch]] %in% input$resid_batch_select)
-          mul_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",input$feature)]]), y = .data[[input$feature]], fill = .data[[batch]])) +
-            geom_boxplot(alpha = 0.3) +
-            geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
-            labs(x = "Batch", y = "Residual") +
-            theme(
-              axis.title.x = element_text(size = 12, face = "bold"),
-              axis.title.y = element_text(size = 12, face = "bold"),
-              axis.text.x = element_text(size = 12, face = "bold"),
-              axis.text.y = element_text(size = 12, face = "bold"),
-            )
+          if(input$resid_label == "No"){
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_mul", color = "Yes", label = "No")
+          }else{
+            combat_plot_gen(result, f = input$feature, batch_control = "Yes", batch_level = input$resid_batch_select, plot_name = "resid_mul", color = "Yes", label = "Yes", angle = input$label_angle)
+          }
         }
-
-        if(input$resid_label == "No"){
-          mul_plot +
-            theme(axis.text.x = element_blank(),
-                  axis.ticks.x = element_blank(),
-                  legend.position = "none")
-        }else{
-          mul_plot +
-            theme(axis.text.x = element_text(angle = input$label_angle, hjust = 0.5, size = 12, face = "bold"),
-                  axis.title.x = element_text(size = 12, face = "bold"),
-                  axis.title.y = element_text(size = 12, face = "bold"),
-                  axis.text.y = element_text(size = 12, face = "bold"),
-                  legend.position = "none"
-            )
-        }
-
       }
     })
 
     ############### Dimensionality Reduction #############################
     output$pc_variance <- DT::renderDT({
-      pca_table <- result$pca_summary %>% filter(.data[["Principal_Component"]] %in% c(input$PC1, input$PC2)) %>% dplyr::select(.data[["Principal_Component"]], .data[["Variance_Explained"]])
-      sum_total_variance <- sum(pca_table$Variance_Explained)
-      pca_table %>% add_row(Principal_Component = "Total", Variance_Explained = sum_total_variance) %>% mutate(Variance_Explained = sprintf("%.3f", .data[["Variance_Explained"]])) %>%
-        DT::datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all"))))
+      combat_table_gen(result, table_name = "pc_variance", PC1 = input$PC1, PC2 = input$PC2)
     })
 
     output$mdmr_control <- renderUI({
@@ -808,54 +534,24 @@ comfam_shiny <- function(result, after = FALSE){
 
     output$pca <- shiny::renderPlot({
       if(input$pca_all == "Yes"){
-        pca_plot_base <- ggplot(result$pca_df, aes(x = .data[[input$PC1]], y = .data[[input$PC2]], color = .data[[batch]])) +
-          geom_point() +
-          labs(x = input$PC1, y = input$PC2, color = "Batch") +
-          theme(
-            axis.title.x = element_text(size = 12, face = "bold"),
-            axis.title.y = element_text(size = 12, face = "bold"),
-            axis.text.x = element_text(size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-          )
-        if(input$pca_label == "No"){pca_plot_base + guides(color = "none")}else{pca_plot_base}
+        if(input$pca_label == "No"){combat_plot_gen(result, batch_control = "No", plot_name = "pca", PC1 = input$PC1, PC2 = input$PC2, label = "No")}else{
+          combat_plot_gen(result, batch_control = "No", plot_name = "pca", PC1 = input$PC1, PC2 = input$PC2, label = "Yes")
+        }
       }else{
-        sub_pca_df <- result$pca_df %>% filter(.data[[batch]] %in% input$pca_batch_select)
-        pca_plot_base <- ggplot(sub_pca_df, aes(x = .data[[input$PC1]], y = .data[[input$PC2]], color = .data[[batch]])) +
-          geom_point() +
-          labs(x = input$PC1, y = input$PC2, color = "Batch") +
-          theme(
-            axis.title.x = element_text(size = 12, face = "bold"),
-            axis.title.y = element_text(size = 12, face = "bold"),
-            axis.text.x = element_text(size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-          )
-        if(input$pca_label == "No"){pca_plot_base + guides(color = "none")}else{pca_plot_base}
+        if(input$pca_label == "No"){combat_plot_gen(result, batch_control = "Yes", batch_level = input$pca_batch_select, plot_name = "pca", PC1 = input$PC1, PC2 = input$PC2, label = "No")}else{
+          combat_plot_gen(result, batch_control = "Yes", batch_level = input$pca_batch_select, plot_name = "pca", PC1 = input$PC1, PC2 = input$PC2, label = "Yes")
+        }
       }
     })
     output$tsne <- shiny::renderPlot({
       if(input$pca_all == "Yes"){
-        tsne_plot_base <- ggplot(result$tsne_df, aes(x = .data[["cor_1"]], y = .data[["cor_2"]], color = .data[[batch]])) +
-          geom_point() +
-          labs(x = "Dim 1", y = "Dim 2", color = "Batch") +
-          theme(
-            axis.title.x = element_text(size = 12, face = "bold"),
-            axis.title.y = element_text(size = 12, face = "bold"),
-            axis.text.x = element_text(size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-          )
-        if(input$pca_label == "No"){tsne_plot_base + guides(color = "none")}else{tsne_plot_base}
+        if(input$pca_label == "No"){combat_plot_gen(result, batch_control = "No", plot_name = "tsne", label = "No")}else{
+          combat_plot_gen(result, batch_control = "No", plot_name = "tsne", label = "Yes")
+        }
       }else{
-        sub_tsne_df <- result$tsne_df %>% filter(.data[[batch]] %in% input$pca_batch_select)
-        tsne_plot_base <- ggplot(sub_tsne_df, aes(x = .data[["cor_1"]], y = .data[["cor_2"]], color = .data[[batch]])) +
-          geom_point() +
-          labs(x = "Dim 1", y = "Dim 2", color = "Batch") +
-          theme(
-            axis.title.x = element_text(size = 12, face = "bold"),
-            axis.title.y = element_text(size = 12, face = "bold"),
-            axis.text.x = element_text(size = 12, face = "bold"),
-            axis.text.y = element_text(size = 12, face = "bold"),
-          )
-        if(input$pca_label == "No"){tsne_plot_base + guides(color = "none")}else{tsne_plot_base}
+        if(input$pca_label == "No"){combat_plot_gen(result, batch_control = "Yes", batch_level = input$pca_batch_select, plot_name = "tsne", label = "No")}else{
+          combat_plot_gen(result, batch_control = "Yes", batch_level = input$pca_batch_select, plot_name = "tsne", label = "Yes")
+        }
       }
     })
 
@@ -963,62 +659,16 @@ comfam_shiny <- function(result, after = FALSE){
 
       output$eb_location <- shiny::renderPlot({
         if(eb){
-          min_x <- eb_df %>% filter(grepl("^gamma_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
-          max_x <- eb_df %>% filter(grepl("^gamma_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
           if(input$batch_selection == "All"){
-            ggplot(eb_df %>% filter(grepl("^gamma_*", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
-                                                                                                                          .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Gamma", y = "Density", color = "Batch", linetype = "Estimate Type") +
-              guides(color = "none") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = TRUE, eb_df = eb_df, batch_control = "No", plot_name = "eb_location")
           }else{
-            ggplot(eb_df %>% filter(grepl("^gamma_*", .data[["type"]]), .data[["batch"]] == input$batch_selection) %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
-                                                                                                                                               .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Gamma", y = "Density", linetype = "Estimate Type") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = TRUE, eb_df = eb_df, batch_control = "Yes", batch_level = input$batch_selection, plot_name = "eb_location")
           }
         }else{
-          min_x <- eb_df %>% filter(grepl("gamma_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
-          max_x <- eb_df %>% filter(grepl("gamma_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
           if(input$batch_selection == "All"){
-            ggplot(eb_df %>% filter(grepl("gamma_hat", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
-                                                                                                                                      .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Gamma", y = "Density", color = "Batch", linetype = "Estimate Type") +
-              guides(color = "none") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = FALSE, eb_df = eb_df, batch_control = "No", plot_name = "eb_location")
           }else{
-            ggplot(eb_df %>% filter(grepl("gamma_hat", .data[["type"]]), .data[["batch"]] == input$batch_selection) %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
-                                                                                                                                                .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Gamma", y = "Density", linetype = "Estimate Type") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = FALSE, eb_df = eb_df, batch_control = "Yes", batch_level = input$batch_selection, plot_name = "eb_location")
           }
         }
       })
@@ -1026,64 +676,16 @@ comfam_shiny <- function(result, after = FALSE){
 
       output$eb_scale <- shiny::renderPlot({
         if(eb){
-          min_x <- eb_df %>% filter(grepl("^delta_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
-          max_x <- eb_df %>% filter(grepl("^delta_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
           if(input$batch_selection == "All"){
-            ggplot(eb_df %>% filter(grepl("^delta_*", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
-                                                                                                                                     .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Delta", y = "Density", color = "Batch", linetype = "Estimate Type") +
-              guides(color = "none") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = TRUE, eb_df = eb_df, batch_control = "No", plot_name = "eb_scale")
           }else{
-            ggplot(eb_df %>% filter(grepl("^delta_*", .data[["type"]]), .data[["batch"]] == input$batch_selection) %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
-                                                                                                                                               .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Delta", y = "Density", linetype = "Estimate Type") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = TRUE, eb_df = eb_df, batch_control = "Yes", batch_level = input$batch_selection, plot_name = "eb_scale")
           }
         }else{
           if(input$batch_selection == "All"){
-            min_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
-            max_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
-            ggplot(eb_df %>% filter(grepl("delta_hat", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
-                                                                                                                                      .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Delta", y = "Density", color = "Batch", linetype = "Estimate Type") +
-              guides(color = "none") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = FALSE, eb_df = eb_df, batch_control = "No", plot_name = "eb_scale")
           }else{
-            min_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
-            max_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
-            ggplot(eb_df %>% filter(grepl("delta_hat", .data[["type"]]), .data[["batch"]] == input$batch_selection) %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
-                                                                                                                                                .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
-              geom_density() +
-              xlim(min_x, max_x) +
-              labs(x = "Delta", y = "Density", linetype = "Estimate Type") +
-              theme(
-                axis.title.x = element_text(size = 12, face = "bold"),
-                axis.title.y = element_text(size = 12, face = "bold"),
-                axis.text.x = element_text(size = 12, face = "bold"),
-                axis.text.y = element_text(size = 12, face = "bold"),
-              )
+            combat_plot_gen(result, eb = FALSE, eb_df = eb_df, batch_control = "Yes", batch_level = input$batch_selection, plot_name = "eb_scale")
           }
         }
       })
@@ -1199,11 +801,6 @@ comfam_shiny <- function(result, after = FALSE){
                shinydashboard::box(
                  width = NULL,
                  DT::DTOutput("test_batch_table"))))
-      #column(width = 6,
-      #       shinydashboard::box(
-      #         width = NULL,
-      #         title = "P-value Distribution",
-      #         shiny::plotOutput("test_batch_plot", height = "600px"))))
     })
 
     output$test_variance_ui <- shiny::renderUI({
@@ -1212,19 +809,10 @@ comfam_shiny <- function(result, after = FALSE){
                shinydashboard::box(
                  width = NULL,
                  DT::DTOutput("test_variance"))))
-      #column(width = 6,
-      #       shinydashboard::box(
-      #         width = NULL,
-      #         title = "P-value Distribution",
-      #         shiny::plotOutput("test_variance_plot", height = "600px"))))
     })
 
     output$test_batch_mdmr <- DT::renderDT({
-      result$mdmr.summary %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                  targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-                                                                                    'sig',
-                                                                                    target = 'row',
-                                                                                    backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+      combat_table_gen(result, table_name = "mdmr")
     })
 
     output$mdmr_sig_text <- renderUI({
@@ -1263,83 +851,23 @@ comfam_shiny <- function(result, after = FALSE){
 
     output$test_batch_table <- DT::renderDT({
       if(input$test_batch == "Kenward-Roger (liner mixed model)"){
-        if(type == "lmer"){
-          result$kr_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                         targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-                                                                                                                           'sig',
-                                                                                                                           target = 'row',
-                                                                                                                           backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow")
-                                                                                                                         )}else{
-                                                                                                                           result$kr_test_df %>% DT::datatable()
-                                                                                                                         }
+        combat_table_gen(result, table_name = "kenward_roger")
       }else if(input$test_batch== "ANOVA"){
-        result$anova_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-          'sig',
-          target = 'row',
-          backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+        combat_table_gen(result, table_name = "anova")
       }else if(input$test_batch == "Kruskal-Wallis"){
-        result$kw_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                       targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-                                                                                                                         'sig',
-                                                                                                                         target = 'row',
-                                                                                                                         backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+        combat_table_gen(result, table_name = "kruskal_wallis")
       }
     })
-
-    #output$test_batch_plot = shiny::renderPlot({
-    #  if(input$test_batch == "Kenward-Roger (liner mixed model)"){
-    #    p_batch_df = result$kr_test_df
-    #  }else if(input$test_batch== "ANOVA"){
-    #    p_batch_df = result$anova_test_df
-    #  }else if(input$test_batch == "Kruskal-Wallis"){
-    #    p_batch_df = result$kw_test_df
-    #  }
-    #  if(input$test_batch != "Kenward-Roger (liner mixed model)" | type == "lmer"){
-    #    ggplot(p_batch_df, aes(x = p.value.raw)) +
-    #      geom_density(aes(y = ..scaled..), fill = "blue", alpha = 0.3) +
-    #      geom_vline(xintercept = 0.05, linetype = "dashed", color = "red") +
-    #      labs( x = "p.value", y = "density")
-    #  }
-    #})
 
     output$test_variance <- DT::renderDT({
       if(input$test_variance == "Fligner-Killeen"){
-        result$fk_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                       targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-                                                                                                                         'sig',
-                                                                                                                         target = 'row',
-                                                                                                                         backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+        combat_table_gen(result, table_name = "fligner_killeen")
       }else if(input$test_variance == "Levene's Test"){
-        result$lv_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                       targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-                                                                                                                         'sig',
-                                                                                                                         target = 'row',
-                                                                                                                         backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+        combat_table_gen(result, table_name = "levenes")
       }else if(input$test_variance == "Bartlett's Test"){
-        if(nrow(result$bl_test_df)!=0){
-          result$bl_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
-                                                                                                                         targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
-                                                                                                                           'sig',
-                                                                                                                           target = 'row',
-                                                                                                                           backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))}else{
-                                                                                                                             result$bl_test_df %>% DT::datatable()
-                                                                                                                           }
+        combat_table_gen(result, table_name = "bartletts")
       }
     })
-
-    #output$test_variance_plot = shiny::renderPlot({
-    #  if(input$test_variance == "Fligner-Killeen"){
-    #    p_variance_df = result$fk_test_df
-    #  }else if(input$test_variance == "Levene's Test"){
-    #    p_variance_df = result$lv_test_df
-    #  }else if(input$test_variance == "Bartlett's Test"){
-    #    p_variance_df = result$bl_test_df
-    #  }
-    #  ggplot(p_variance_df, aes(x = p.value.raw)) +
-    #    geom_density(aes(y = ..scaled..), fill = "blue", alpha = 0.3) +
-    #    geom_vline(xintercept = 0.05, linetype = "dashed", color = "red") +
-    #    labs( x = "p.value", y = "density")
-    #})
 
     output$sig_pct_batch <- shiny::renderText({
       if(input$test_batch == "Kenward-Roger (liner mixed model)"){
@@ -1382,5 +910,722 @@ comfam_shiny <- function(result, after = FALSE){
   shinyApp(ui = ui, server = server, enableBookmarking = "url")
 }
 
+
+#' Generate Diagnostic Plots for Batch Effect Analysis
+#'
+#' This function generates a variety of diagnostic plots for analyzing batch effects and their relationships with features and covariates.
+#' Depending on the specified plot type, it can create density plots, box plots, residual plots, PCA plots, T-SNE plots, and empirical Bayes diagnostic plots.
+#'
+#' @param result A list derived from `visual_prep()` that contains datasets and statistical test results for Shiny visualization.
+#' @param f A string specifying the feature of interest for visualization.
+#' @param batch_control A string indicating whether to include batch-specific controls. Defaults to `"No"`.
+#' @param batch_level A vector specifying the batch levels to include in the plot. Used only when `batch_control` is not `"No"`.
+#' @param plot_name A string specifying the type of plot to generate. Options include `"batch_density"`, `"cov_feature"`, `"batch_summary"`, `"cov_distribution"`, `"resid_add"`, `"resid_mul"`, `"pca"`, `"tsne"`, `"eb_location"`, and `"eb_scale"`.
+#' @param c A string specifying the covariate of interest for `"cov_feature"` or `"cov_distribution"` plots.
+#' @param smooth_method A string specifying the smoothing method for trend lines. Defaults to `"lm"` (linear model).
+#' @param alpha A numeric value between 0 and 1 controlling the transparency of trend lines. Defaults to `0.2`.
+#' @param char_plot_type A string specifying the type of plot for categorical covariates. Options include `"boxplot"`, `"boxplot with points"`, and `"density plot"`. Defaults to `"boxplot"`.
+#' @param text_status A string indicating whether to display text annotations in the plot. Defaults to `"No"`.
+#' @param color A string indicating whether to use color coding in plots. Defaults to `"No"`.
+#' @param label A string indicating whether to include axis labels in the plot. Defaults to `"No"`.
+#' @param angle A numeric value specifying the angle of x-axis labels. Defaults to `0`.
+#' @param PC1 A string specifying the first principal component for PCA plots.
+#' @param PC2 A string specifying the second principal component for PCA plots.
+#' @param eb A logical value indicating whether to include empirical Bayes prior information in the plot. Defaults to `TRUE`.
+#' @param eb_df A data frame containing empirical Bayes information for generating `eb_location` and `eb_scale` plots.
+#'
+#' @return A ggplot object representing the specified diagnostic plot.
+#'
+#' @details
+#' The function dynamically generates plots based on the `plot_name` parameter:
+#' - `"batch_density"`: Density plots of features by batch levels.
+#' - `"cov_feature"`: Covariate vs. feature plots with optional batch adjustments.
+#' - `"batch_summary"`: Bar plots summarizing batch-level distributions.
+#' - `"cov_distribution"`: Covariate distributions stratified by batch.
+#' - `"resid_add"`: Additive residual box plots.
+#' - `"resid_mul"`: Multiplicative residual box plots.
+#' - `"pca"`: Principal Component Analysis (PCA) plots.
+#' - `"tsne"`: T-SNE plots for dimensionality reduction.
+#' - `"eb_location"`: Empirical Bayes location parameter density plots.
+#' - `"eb_scale"`: Empirical Bayes scale parameter density plots.
+#'
+#' @examples
+#' \dontrun{
+#' combat_plot_gen(result, f = "Feature1", plot_name = "batch_density")
+#' combat_plot_gen(result, f = "Feature1", c = "Age", plot_name = "cov_feature")
+#' }
+#'
+#' @export
+
+combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level = NULL, plot_name, c = NULL, smooth_method = "lm", alpha = 0.2, char_plot_type = "boxplot", text_status = "No",
+                            color = "No", label = "No", angle = 0, PC1 = NULL, PC2 = NULL, eb = TRUE, eb_df = NULL){
+  info <- result$info
+  type <- info$type
+  df <- info$df
+  batch <- info$batch
+  features <- info$features
+  covariates <- info$cov_shiny
+  char_var <- info$char_var
+  num_var <- setdiff(covariates, char_var)
+  if(plot_name == "batch_density"){
+    ## batch level density plot
+    if(batch_control == "No"){
+      ggplot(df, aes(x = .data[[f]])) +
+        geom_density(fill = "blue", alpha = 0.3) +
+        labs(x = f) +
+        theme(
+          axis.title.x = element_text(size = 12, face = "bold"),
+          axis.title.y = element_text(size = 12, face = "bold"),
+          axis.text.x = element_text(size = 12, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"),
+        )
+    }else{
+      overview_sub_df <- df %>% filter(.data[[batch]] %in% batch_level)
+      ggplot(overview_sub_df, aes(x = .data[[f]], fill = .data[[batch]])) +
+        geom_density(alpha = 0.3) +
+        labs(x = f, fill = batch) +
+        theme(
+          axis.title.x = element_text(size = 12, face = "bold"),
+          axis.title.y = element_text(size = 12, face = "bold"),
+          axis.text.x = element_text(size = 12, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"),
+        )
+    }
+  }else if(plot_name == "cov_feature"){
+    ## covariate vs feature plot
+    if (!is.null(covariates)){
+      if(c %in% num_var){
+        if(batch_control == "No"){
+          ggplot(df, aes(x = .data[[c]], y = .data[[f]])) +
+            geom_point() +
+            geom_smooth(method = smooth_method, alpha = as.numeric(alpha)) +
+            labs(x = c, y = f) +
+            theme(
+              axis.title.x = element_text(size = 12, face = "bold"),
+              axis.title.y = element_text(size = 12, face = "bold"),
+              axis.text.x = element_text(size = 12, face = "bold"),
+              axis.text.y = element_text(size = 12, face = "bold"),
+            )
+        }else{
+          overview_sub_df <- df %>% filter(.data[[batch]] %in% batch_level)
+          ggplot(overview_sub_df, aes(x = .data[[c]], y = .data[[f]], color = .data[[batch]])) +
+            geom_point() +
+            geom_smooth(method = smooth_method, aes(fill = .data[[batch]]), alpha = as.numeric(alpha)) +
+            labs(x = c, y = f, color = batch, fill = batch) +
+            theme(
+              axis.title.x = element_text(size = 12, face = "bold"),
+              axis.title.y = element_text(size = 12, face = "bold"),
+              axis.text.x = element_text(size = 12, face = "bold"),
+              axis.text.y = element_text(size = 12, face = "bold"),
+            )
+        }
+      }else if(c %in% char_var){
+        if(char_plot_type == "boxplot"){
+          if(batch_control == "No"){
+            ggplot(df, aes(x = .data[[c]], y = .data[[f]], fill = .data[[c]])) +
+              geom_boxplot() +
+              scale_fill_brewer(palette="Pastel1") +
+              labs(x = c, y = f, fill = c) +
+              theme(
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.x = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold"),
+              )
+
+          }else{
+            overview_sub_df <- df %>% filter(.data[[batch]] %in% batch_level)
+            ggplot(overview_sub_df, aes(x = .data[[c]], y = .data[[f]], fill = .data[[batch]])) +
+              geom_boxplot() +
+              scale_fill_brewer(palette="Pastel1") +
+              labs(x = c, y = f, fill = batch) +
+              theme(
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.x = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold"),
+              )
+          }
+        }else if(char_plot_type == "boxplot with points"){
+          if(batch_control == "No"){
+            ggplot(df, aes(x = .data[[c]], y = .data[[f]], fill = .data[[c]])) +
+              geom_boxplot() +
+              geom_jitter(aes(shape = .data[[c]])) +
+              scale_fill_brewer(palette="Pastel1") +
+              labs(x = c, y = f, fill = c, shape = c) +
+              theme(
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.x = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold"),
+              )
+          }else{
+            overview_sub_df <- df %>% filter(.data[[batch]] %in% batch_level)
+            ggplot(overview_sub_df, aes(x = .data[[c]], y = .data[[f]], fill = .data[[batch]])) +
+              geom_boxplot() +
+              geom_jitter(aes(shape = .data[[c]])) +
+              scale_fill_brewer(palette="Pastel1") +
+              labs(x = c, y = f, fill = batch, shape = c) +
+              theme(
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.x = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold"),
+              )
+          }
+        }else if(char_plot_type == "density plot"){
+          ggplot(df, aes(x = .data[[f]], fill = .data[[c]])) +
+            geom_density(alpha = 0.3) +
+            labs(x = f, fill = c) +
+            theme(
+              axis.title.x = element_text(size = 12, face = "bold"),
+              axis.title.y = element_text(size = 12, face = "bold"),
+              axis.text.x = element_text(size = 12, face = "bold"),
+              axis.text.y = element_text(size = 12, face = "bold"),
+            )
+        }
+      }
+    }
+
+  }else if(plot_name == "batch_summary"){
+    ## batch level distribution plot
+    add_plot <- ggplot(info$summary_df %>% filter(remove == "keeped"), aes(x = .data[["count"]], y = .data[[batch]])) +
+      geom_bar(stat = "identity", fill = "aquamarine") +
+      labs(x = "Count", y = "Batch") +
+      theme(
+        axis.title.x = element_text(size = 12, face = "bold"),
+        axis.title.y = element_text(size = 12, face = "bold"),
+        axis.text.x = element_text(size = 12, face = "bold"),
+        axis.text.y = element_text(size = 12, face = "bold"),
+        axis.ticks.y = element_blank())
+    if(text_status == "No"){add_plot}else{add_plot + geom_text(aes(label = .data[["count"]]), hjust = -0.2, position = position_dodge(0.9), size = 5, colour = "black")}
+  }else if(plot_name == "cov_distribution"){
+    ## covariate distribution
+    if (!is.null(covariates)){
+      if(c %in% num_var){
+        ggplot(df, aes(x = .data[[c]], y = reorder(as.factor(.data[[batch]]), .data[[c]], Fun = median), fill = .data[[batch]])) +
+          geom_boxplot(alpha = 0.3) +
+          labs(x = c, y = "Batch", fill = "Covariate") +
+          theme(
+            legend.position = "none",
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+            axis.ticks.y = element_blank())
+      }else if(c %in% char_var){
+        df_c <- df %>% group_by(.data[[batch]], .data[[c]]) %>% dplyr::tally() %>% mutate(percentage = .data[["n"]]/sum(.data[["n"]]))
+        colnames(df_c) <- c(batch, c, "n", "percentage")
+        add_plot <- ggplot(df_c, aes(y = as.factor(.data[[batch]]), x = .data[["n"]], fill = .data[[c]])) +
+          geom_bar(stat="identity", position ="fill") +
+          scale_fill_brewer(palette = "Pastel1") +
+          labs(x = "Percentage", y = "Batch", fill = c) +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+            axis.ticks.y = element_blank())
+        if(text_status == "No"){add_plot}else{add_plot + geom_text(aes(label = paste0(sprintf("%1.1f", .data[["percentage"]]*100),"%")), position = position_fill(vjust=0.5), colour="black", size = 5)}
+      }
+    }
+  }else if(plot_name == "resid_add"){
+    ## additive residual plot
+    add_mean <- result$residual_add_df %>% group_by(result$residual_add_df[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
+    colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
+    result$residual_add_df <- result$residual_add_df %>% left_join(add_mean, by = c(batch))
+    if(color == "No"){
+      if(batch_control == "No"){
+        add_plot <- ggplot(result$residual_add_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]])) +
+          geom_boxplot() +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        sub_plot_df <- result$residual_add_df %>% filter(.data[[batch]] %in% batch_level)
+        add_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]])) +
+          geom_boxplot() +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+
+      if(label == "No"){
+        add_plot +
+          theme(axis.text.x = element_blank(),
+                axis.ticks.x = element_blank())
+      }else{
+        add_plot +
+          theme(axis.text.x = element_text(angle = angle, hjust = 0.5, size = 12, face = "bold"),
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold")
+          )
+      }
+
+    }else{
+
+      if(batch_control == "No"){
+        add_plot <- ggplot(result$residual_add_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]], fill = .data[[batch]])) +
+          geom_boxplot(alpha = 0.3) +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual")
+      }else{
+        sub_plot_df <- result$residual_add_df %>% filter(.data[[batch]] %in% batch_level)
+        add_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]], fill = .data[[batch]])) +
+          geom_boxplot(alpha = 0.3) +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+
+      if(label == "No"){
+        add_plot +
+          theme(axis.text.x = element_blank(),
+                axis.ticks.x = element_blank(),
+                legend.position = "none")
+      }else{
+        add_plot +
+          theme(axis.text.x = element_text(angle = angle, hjust = 0.5, size = 12, face = "bold"),
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold"),
+                legend.position = "none"
+          )
+      }
+
+    }
+  }else if(plot_name == "resid_mul"){
+    ## multiplicative residual plot
+    add_mean <- result$residual_add_df %>% group_by(result$residual_add_df[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
+    colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
+    result$residual_ml_df <- result$residual_ml_df %>% left_join(add_mean, by = c(batch))
+    if(color == "No"){
+
+      if(batch_control == "No"){
+        mul_plot <- ggplot(result$residual_ml_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]])) +
+          geom_boxplot() +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        sub_plot_df <- result$residual_ml_df %>% filter(.data[[batch]] %in% batch_level)
+        mul_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]])) +
+          geom_boxplot() +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+      if(label == "No"){
+        mul_plot +
+          theme(axis.text.x = element_blank(),
+                axis.ticks.x = element_blank())
+      }else{
+        mul_plot +
+          theme(axis.text.x = element_text(angle = angle, hjust = 0.5, size = 12, face = "bold"),
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold")
+          )
+      }
+    }else{
+      if(batch_control == "No"){
+        mul_plot <- ggplot(result$residual_ml_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]], fill = .data[[batch]])) +
+          geom_boxplot(alpha = 0.3) +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        sub_plot_df <- result$residual_ml_df %>% filter(.data[[batch]] %in% batch_level)
+        mul_plot <- ggplot(sub_plot_df, aes(x = reorder(as.factor(.data[[batch]]), .data[[paste0("mean_",f)]]), y = .data[[f]], fill = .data[[batch]])) +
+          geom_boxplot(alpha = 0.3) +
+          geom_hline(yintercept = 0, linetype = "dashed", col = "red") +
+          labs(x = "Batch", y = "Residual") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+
+      if(label == "No"){
+        mul_plot +
+          theme(axis.text.x = element_blank(),
+                axis.ticks.x = element_blank(),
+                legend.position = "none")
+      }else{
+        mul_plot +
+          theme(axis.text.x = element_text(angle = angle, hjust = 0.5, size = 12, face = "bold"),
+                axis.title.x = element_text(size = 12, face = "bold"),
+                axis.title.y = element_text(size = 12, face = "bold"),
+                axis.text.y = element_text(size = 12, face = "bold"),
+                legend.position = "none"
+          )
+      }
+
+    }
+  }else if(plot_name == "pca"){
+    ## PCA plot
+    if(batch_control == "No"){
+      pca_plot_base <- ggplot(result$pca_df, aes(x = .data[[PC1]], y = .data[[PC2]], color = .data[[batch]])) +
+        geom_point() +
+        labs(x = PC1, y = PC2, color = "Batch") +
+        theme(
+          axis.title.x = element_text(size = 12, face = "bold"),
+          axis.title.y = element_text(size = 12, face = "bold"),
+          axis.text.x = element_text(size = 12, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"),
+        )
+      if(label == "No"){pca_plot_base + guides(color = "none")}else{pca_plot_base}
+    }else{
+      sub_pca_df <- result$pca_df %>% filter(.data[[batch]] %in% batch_level)
+      pca_plot_base <- ggplot(sub_pca_df, aes(x = .data[[PC1]], y = .data[[PC2]], color = .data[[batch]])) +
+        geom_point() +
+        labs(x = PC1, y = PC2, color = "Batch") +
+        theme(
+          axis.title.x = element_text(size = 12, face = "bold"),
+          axis.title.y = element_text(size = 12, face = "bold"),
+          axis.text.x = element_text(size = 12, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"),
+        )
+      if(label == "No"){pca_plot_base + guides(color = "none")}else{pca_plot_base}
+    }
+  }else if(plot_name == "tsne"){
+    ## T-SNE plot
+    if(batch_control == "No"){
+      tsne_plot_base <- ggplot(result$tsne_df, aes(x = .data[["cor_1"]], y = .data[["cor_2"]], color = .data[[batch]])) +
+        geom_point() +
+        labs(x = "Dim 1", y = "Dim 2", color = "Batch") +
+        theme(
+          axis.title.x = element_text(size = 12, face = "bold"),
+          axis.title.y = element_text(size = 12, face = "bold"),
+          axis.text.x = element_text(size = 12, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"),
+        )
+      if(label == "No"){tsne_plot_base + guides(color = "none")}else{tsne_plot_base}
+    }else{
+      sub_tsne_df <- result$tsne_df %>% filter(.data[[batch]] %in% batch_level)
+      tsne_plot_base <- ggplot(sub_tsne_df, aes(x = .data[["cor_1"]], y = .data[["cor_2"]], color = .data[[batch]])) +
+        geom_point() +
+        labs(x = "Dim 1", y = "Dim 2", color = "Batch") +
+        theme(
+          axis.title.x = element_text(size = 12, face = "bold"),
+          axis.title.y = element_text(size = 12, face = "bold"),
+          axis.text.x = element_text(size = 12, face = "bold"),
+          axis.text.y = element_text(size = 12, face = "bold"),
+        )
+      if(label == "No"){tsne_plot_base + guides(color = "none")}else{tsne_plot_base}
+    }
+  }else if(plot_name == "eb_location"){
+    ## eb_location plot
+    if(eb){
+      min_x <- eb_df %>% filter(grepl("^gamma_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
+      max_x <- eb_df %>% filter(grepl("^gamma_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
+      if(batch_control == "No"){
+        ggplot(eb_df %>% filter(grepl("^gamma_*", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
+                                                                                                                                 .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Gamma", y = "Density", color = "Batch", linetype = "Estimate Type") +
+          guides(color = "none") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        ggplot(eb_df %>% filter(grepl("^gamma_*", .data[["type"]]), .data[["batch"]] == batch_level) %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
+                                                                                                                                 .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Gamma", y = "Density", linetype = "Estimate Type") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+    }else{
+      min_x <- eb_df %>% filter(grepl("gamma_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
+      max_x <- eb_df %>% filter(grepl("gamma_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
+      if(batch_control == "No"){
+        ggplot(eb_df %>% filter(grepl("gamma_hat", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
+                                                                                                                                  .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Gamma", y = "Density", color = "Batch", linetype = "Estimate Type") +
+          guides(color = "none") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        ggplot(eb_df %>% filter(grepl("gamma_hat", .data[["type"]]), .data[["batch"]] == batch_level) %>% mutate(type = case_when(.data[["type"]] == "gamma_prior" ~ "EB prior",
+                                                                                                                                  .data[["type"]] == "gamma_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Gamma", y = "Density", linetype = "Estimate Type") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+    }
+  }else if(plot_name == "eb_scale"){
+    ## eb_scale plot
+    if(eb){
+      min_x <- eb_df %>% filter(grepl("^delta_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
+      max_x <- eb_df %>% filter(grepl("^delta_*", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
+      if(batch_control == "No"){
+        ggplot(eb_df %>% filter(grepl("^delta_*", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
+                                                                                                                                 .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Delta", y = "Density", color = "Batch", linetype = "Estimate Type") +
+          guides(color = "none") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        ggplot(eb_df %>% filter(grepl("^delta_*", .data[["type"]]), .data[["batch"]] == batch_level) %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
+                                                                                                                                 .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Delta", y = "Density", linetype = "Estimate Type") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+    }else{
+      if(batch_control == "No"){
+        min_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
+        max_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
+        ggplot(eb_df %>% filter(grepl("delta_hat", .data[["type"]]), .data[["batch"]] != "reference") %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
+                                                                                                                                  .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], color = .data[["batch"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Delta", y = "Density", color = "Batch", linetype = "Estimate Type") +
+          guides(color = "none") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }else{
+        min_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% min()
+        max_x <- eb_df %>% filter(grepl("delta_hat", .data[["type"]])) %>% pull(.data[["eb_values"]]) %>% max()
+        ggplot(eb_df %>% filter(grepl("delta_hat", .data[["type"]]), .data[["batch"]] == batch_level) %>% mutate(type = case_when(.data[["type"]] == "delta_prior" ~ "EB prior",
+                                                                                                                                  .data[["type"]] == "delta_hat" ~ "Emprical values")), aes(x = .data[["eb_values"]], linetype = .data[["type"]])) +
+          geom_density() +
+          xlim(min_x, max_x) +
+          labs(x = "Delta", y = "Density", linetype = "Estimate Type") +
+          theme(
+            axis.title.x = element_text(size = 12, face = "bold"),
+            axis.title.y = element_text(size = 12, face = "bold"),
+            axis.text.x = element_text(size = 12, face = "bold"),
+            axis.text.y = element_text(size = 12, face = "bold"),
+          )
+      }
+    }
+  }
+
+}
+
+
+#' Generate Diagnostic Tables for Batch Effect Analysis
+#'
+#' This function generates a variety of tables to summarize data and results from batch effect analyses.
+#' Depending on the specified table name, it can create data overview tables, exploratory analysis summaries,
+#' statistical test results, PCA summaries, and covariate distributions.
+#'
+#' @param result A list derived from `visual_prep()` that contains datasets and statistical test results for Shiny visualization.
+#' @param table_name A string specifying the type of table to generate. Options include:
+#'   - `"data_overview"`: Overview of the dataset, including covariates, features, and batch information.
+#'   - `"exploratory_analysis"`: Summary of the selected feature and covariates.
+#'   - `"summary_df"`: Summary of batch-level distributions, including batch removal status.
+#'   - `"cov_table"`: Covariate summary table, displaying distributions for numeric or categorical covariates.
+#'   - `"pc_variance"`: Variance explained by specified principal components.
+#'   - `"mdmr"`: Results from the Multivariate Distance Matrix Regression (MDMR) analysis.
+#'   - `"kenward_roger"`: Results from Kenward-Roger tests.
+#'   - `"anova"`: Results from ANOVA tests.
+#'   - `"kruskal_wallis"`: Results from Kruskal-Wallis tests.
+#'   - `"fligner_killeen"`: Results from Fligner-Killeen tests.
+#'   - `"levenes"`: Results from Levene's tests.
+#'   - `"bartletts"`: Results from Bartlett's tests.
+#' @param f A string specifying the feature of interest for tables requiring a specific feature. Default is `NULL`.
+#' @param c A string specifying the covariate of interest for tables requiring a specific covariate. Default is `NULL`.
+#' @param PC1 A string specifying the first principal component for PCA variance tables. Default is `NULL`.
+#' @param PC2 A string specifying the second principal component for PCA variance tables. Default is `NULL`.
+#'
+#' @return A `DT::datatable` object containing the requested table.
+#'
+#' @details
+#' The function dynamically generates tables based on the `table_name` parameter.
+#'
+#' @examples
+#' \dontrun{
+#' combat_table_gen(result, table_name = "data_overview")
+#' combat_table_gen(result, table_name = "cov_table", c = "Age")
+#' combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
+#' }
+#'
+#' @export
+
+
+combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL, PC2 = NULL){
+  info <- result$info
+  type <- info$type
+  df <- info$df
+  batch <- info$batch
+  features <- info$features
+  covariates <- info$cov_shiny
+  char_var <- info$char_var
+  num_var <- setdiff(covariates, char_var)
+  other <- setdiff(colnames(df), c(batch, covariates, features))
+  df_show <- df[c(batch, covariates, features, other)]
+  if(table_name == "data_overview"){
+    df_show %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                                    targets = "_all")))) %>% formatStyle(
+                                                                      covariates,
+                                                                      backgroundColor = "pink"
+                                                                    ) %>% formatStyle(
+                                                                      features,
+                                                                      backgroundColor = "lightyellow"
+                                                                    ) %>% formatStyle(
+                                                                      batch,
+                                                                      backgroundColor = "lightblue"
+                                                                    )
+  }else if(table_name == "exploratory_analysis"){
+    df_show %>% dplyr::select(all_of(c(batch, covariates, f))) %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                                                       targets = "_all")))) %>% formatStyle(
+                                                                                                                         covariates,
+                                                                                                                         backgroundColor = "pink"
+                                                                                                                       ) %>% formatStyle(
+                                                                                                                         f,
+                                                                                                                         backgroundColor = "lightyellow"
+                                                                                                                       ) %>% formatStyle(
+                                                                                                                         batch,
+                                                                                                                         backgroundColor = "lightblue"
+                                                                                                                       )
+  }else if(table_name == "summary_df"){
+    info$summary_df %>% mutate(`percentage (%)` = sprintf("%.3f", .data[["percentage (%)"]])) %>% arrange(desc(.data[["remove"]])) %>%
+      DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                          targets = "_all")))) %>% formatStyle(
+                                                            'remove',
+                                                            target = 'row',
+                                                            backgroundColor = styleEqual(c("removed"), "lightyellow")
+                                                          )
+  }else if(table_name == "cov_table"){
+    if (!is.null(covariates)){
+      if(c %in% num_var){
+        cov_summary_table <- df %>% group_by(.data[[batch]]) %>% summarize(min = min(.data[[c]]), mean = mean(.data[[c]]), max = max(.data[[c]]))
+        colnames(cov_summary_table) <- c(batch, "min", "mean", "max")
+        cov_summary_table <- cov_summary_table %>% mutate(mean = sprintf("%.3f", .data[["mean"]]),
+                                                          min = sprintf("%.3f", .data[["min"]]),
+                                                          max = sprintf("%.3f", .data[["max"]]))
+        cov_summary_table %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                  targets = "_all"))))
+      }else if(c %in% char_var){
+        cov_summary_table <- df %>% group_by(.data[[batch]], .data[[c]]) %>% dplyr::tally() %>% mutate(percentage = 100*.data[["n"]]/sum(.data[["n"]]))
+        colnames(cov_summary_table) <- c(batch, c, "n", "percentage (%)")
+        cov_summary_table %>% mutate(`percentage (%)` = sprintf("%.3f", .data[["percentage (%)"]])) %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                                                                                            targets = "_all"))))
+      }
+    }
+
+  }else if(table_name == "pc_variance"){
+    pca_table <- result$pca_summary %>% filter(.data[["Principal_Component"]] %in% c(PC1, PC2)) %>% dplyr::select(.data[["Principal_Component"]], .data[["Variance_Explained"]])
+    sum_total_variance <- sum(pca_table$Variance_Explained)
+    pca_table %>% add_row(Principal_Component = "Total", Variance_Explained = sum_total_variance) %>% mutate(Variance_Explained = sprintf("%.3f", .data[["Variance_Explained"]])) %>%
+      DT::datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all"))))
+  }else if(table_name == "mdmr"){
+    result$mdmr.summary %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+                                                                                  'sig',
+                                                                                  target = 'row',
+                                                                                  backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+  }else if(table_name == "kenward_roger"){
+    if(type == "lmer"){
+      result$kr_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>%
+        formatStyle('sig', target = 'row', backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))}else{result$kr_test_df %>% DT::datatable()}
+  }else if(table_name == "anova"){
+    result$anova_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+      'sig',
+      target = 'row',
+      backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+  }else if(table_name == "kruskal_wallis"){
+    result$kw_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                                                                                    targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+                                                                                                                                                      'sig',
+                                                                                                                                                      target = 'row',
+                                                                                                                                                      backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+  }else if(table_name == "fligner_killeen"){
+    result$fk_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                                                                                                            targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+                                                                                                                                                                              'sig',
+                                                                                                                                                                              target = 'row',
+                                                                                                                                                                              backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+  }else if(table_name == "levenes"){
+    result$lv_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                                                                                                            targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+                                                                                                                                                                              'sig',
+                                                                                                                                                                              target = 'row',
+                                                                                                                                                                              backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
+  }else if(table_name == "bartletts"){
+    if(nrow(result$bl_test_df)!=0){
+      result$bl_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
+                                                                                                                                                                              targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+                                                                                                                                                                                'sig',
+                                                                                                                                                                                target = 'row',
+                                                                                                                                                                                backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))}else{
+                                                                                                                                                                                  result$bl_test_df %>% DT::datatable()
+                                                                                                                                                                                }
+
+  }
+}
 
 

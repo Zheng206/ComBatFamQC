@@ -4,18 +4,20 @@
 \alias{diag_save}
 \title{Export Batch Effect Diagnosis Results}
 \usage{
-diag_save(path, result)
+diag_save(path, result, use_quarto = TRUE)
 }
 \arguments{
-\item{path}{The path to save the excel file.}
+\item{path}{The path to save the result.}
 
 \item{result}{A list derived from \code{visual_prep()} that contains datasets and statistical test results.}
+
+\item{use_quarto}{A boolean variable indicating whether to generate a Quarto report.}
 }
 \value{
 This function does not return a value. It saves the data to the specified file.
 }
 \description{
-Save all the batch effect diagnosis result in a single excel file.
+Save all the batch effect diagnosis results in a single Excel file or a Quarto report.
 }
 \examples{
 \dontrun{

@@ -1,5 +1,9 @@
 # ComBatFamQC
 
+ <!-- badges: start -->
+  [![R-CMD-check](https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml)
+  <!-- badges: end -->
+  
 The **ComBatFamQC** package is a powerful tool designed to streamline <span style="color:purple;">interactive batch effect diagnostics</span>, <span style="color:green;">harmonization</span>, and <span style="color:blue;">post-harmonization downstream analysis</span>. This package is specifically tailored to provide both <u>interactive qualitative visualization</u> and <u>statistical testing for batch effects diagnostics</u>, as well as to offer various easily-used <u>built-in harmonization techniques</u> to facilitate a better harmonization process.
 
 Additionally, the package provides <u>life span age trends of brain structures</u> and <u>residual datasets</u>, eliminating specific covariates' effects to better conduct post-harmonization downstream analysis. In terms of the final delivery, it will provide interactive visualization through R Shiny for batch effect diagnostics and age trend visualization. Additionally, it integrates the harmonization process and can provide a harmonized dataset, fitted ComBat model, residual dataset, fitted regression model, etc.
