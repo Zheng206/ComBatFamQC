@@ -24,7 +24,7 @@ user's default web browser. Execution is blocked until the app is closed.
 \examples{
 result_lm <- visual_prep(type = "lm", features = colnames(adni)[43:53],
 batch = "manufac", covariates = c("AGE", "SEX", "DIAGNOSIS"),
-df = head(adni, 500), cores = 2)
+df = head(adni, 500), cores = 1)
 \dontrun{
 comfam_shiny(result = result_lm)
 }

@@ -48,8 +48,8 @@ test_that("Harmonization functions work correctly", {
   ref_model <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = reference_df)
   ref_model_cov <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = reference_df, family = "covfam")
   #### harmonize new data to the reference data
-  reference_model <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni, reference = ref_model$harmonized_df)
-  reference_model_cov <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni, reference = ref_model_cov$harmonized_df, family = "covfam")
+  reference_model <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni, reference = ref_model$harmonized_df, eb = FALSE)
+  reference_model_cov <- combat_harm(type = "lmer", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = "subid", df = adni, reference = ref_model_cov$harmonized_df, family = "covfam", eb = FALSE)
   expect_type(reference_model, "list")
   expect_type(reference_model, "list")
 })

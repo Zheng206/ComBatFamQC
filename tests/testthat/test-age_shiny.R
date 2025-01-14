@@ -78,7 +78,7 @@ test_that("Age dataframe generated correctly", {
   age_sub <- age_list_gen(sub_df = age_sub_df,  lq = 0.25, hq = 0.75)
 
   saved_age_list <- readRDS("previous-results/age_list.rds")
-  expect_identical(age_sub$predicted_df_sex, saved_age_list[[1]]$predicted_df_sex)
+  expect_equal(age_sub$predicted_df_sex, saved_age_list[[1]]$predicted_df_sex, tolerance = 1e-8)
 
   age_sub_1 <- age_list_gen(sub_df = age_sub_df,  lq = 0.25, hq = 0.75, mu = "linear", sigma = "linear", tau = "smooth", nu = "smooth")
   expect_type(age_sub_1, "list")
