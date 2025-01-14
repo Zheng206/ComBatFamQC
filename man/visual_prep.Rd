@@ -66,6 +66,6 @@ Prepare relevant datasets and statistical test results for batch/site effect dia
 }
 \examples{
 visual_prep(type = "lm", features = colnames(adni)[43:53], batch = "manufac",
-covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni, 500), cores = 2)
+covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni, 500), cores = 1)
 
 }
