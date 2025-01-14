@@ -86,7 +86,22 @@ result_lmer <- visual_prep(type = "lmer", features = features, batch = batch, co
 comfam_shiny(result_lmer)
 ```
 
+# Export Batch Effect Diagnosis Result
 
+There are two export options: 1) generate a Quarto report (requires Quarto to be installed), and 2) generate a combined Excel file.
+
+-   Generate a Quarto report
+
+```{r, eval=FALSE}
+#library(quarto)
+diag_save(path = "path/to/dir", result = result_lmer, use_quarto = TRUE)
+```
+
+-   Generate a combined EXCEL file
+
+```{r, eval=FALSE}
+diag_save(path = "path/to/dir", result = result_lmer, use_quarto = FALSE)
+```
 
 # Harmonization Using default ComBatFamily Methods
 

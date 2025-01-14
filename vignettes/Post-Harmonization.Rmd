@@ -84,8 +84,13 @@ quantile_type <- c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 
 
 ## Launch Shiny App for Visualization
 
+Users can choose to generate age trend plots using the `ggplot` package or the `plotly` package (if `plotly` is installed).
+
 ```{r, eval=FALSE}
-ComBatFamQC::age_shiny(age_list, features, quantile_type)
+# plotly: interactive plot
+ComBatFamQC::age_shiny(age_list, features, quantile_type, use_plotly = TRUE)
+# ggplot: static plot
+ComBatFamQC::age_shiny(age_list, features, quantile_type, use_plotly = FALSE)
 ```
 
 ## Save Age Trend Table and GAMLSS Model
