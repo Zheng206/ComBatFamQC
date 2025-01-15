@@ -9,13 +9,13 @@ comfam_shiny(result, after = FALSE)
 \arguments{
 \item{result}{A list derived from \code{visual_prep()} that contains datasets and statistical test results for Shiny visualization.}
 
-\item{after}{A boolean variable indicating whether the batch effect diagnostic occurs before or after harmonization. The default value is FALSE.}
+\item{after}{A boolean variable indicating whether the batch effect diagnostic occurs before or after harmonization (default: \code{FALSE}).}
 }
 \value{
 This function does not return a value. It launches a Shiny app.
 }
 \description{
-Provide interactive batch/site effect visualization through Shiny app.
+Provides an interactive visualization of batch or site effects using a Shiny application.
 }
 \details{
 When this function is called, it starts a Shiny application in the

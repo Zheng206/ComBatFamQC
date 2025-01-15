@@ -19,7 +19,7 @@ visual_prep(
 )
 }
 \arguments{
-\item{type}{The name of a regression model to be used in batch effect diagnostics stage: "lmer", "lm", "gam".}
+\item{type}{The name of a regression model to be used in batch effect diagnostics stage: \code{"lmer"}, \code{"lm"}, \code{"gam"}.}
 
 \item{features}{The name of the features to be evaluated.}
 
@@ -27,21 +27,21 @@ visual_prep(
 
 \item{covariates}{Name of covariates supplied to \code{model}.}
 
-\item{interaction}{Expression of interaction terms supplied to \code{model} (eg: "age,diagnosis").}
+\item{interaction}{Expression of interaction terms supplied to \code{model} (eg: \code{"age,diagnosis"}).}
 
 \item{random}{Variable name of a random effect in linear mixed effect model.}
 
 \item{smooth}{Variable name that requires a smooth function.}
 
-\item{smooth_int_type}{Indicates the type of interaction in \code{gam} models. By default, smooth_int_type is set to be "linear", representing linear interaction terms.
-"categorical-continuous", "factor-smooth" both represent categorical-continuous interactions ("factor-smooth" includes categorical variable as part of the smooth),
-"tensor" represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.}
+\item{smooth_int_type}{Indicates the type of interaction in \code{gam} models. By default, \code{smooth_int_type} is set to be \code{"linear"}, representing linear interaction terms.
+\code{"categorical-continuous"}, \code{"factor-smooth"} both represent categorical-continuous interactions (\code{"factor-smooth"} includes categorical variable as part of the smooth),
+\code{"tensor"} represents interactions with different scales, and \code{"smooth-smooth"} represents interaction between smoothed variables.}
 
 \item{df}{Dataset to be evaluated.}
 
 \item{cores}{number of cores used for parallel computing.}
 
-\item{mdmr}{A boolean variable indicating whether to run the MDMR test. By default, it is set to TRUE.}
+\item{mdmr}{A boolean variable indicating whether to run the MDMR test (default: \code{TRUE}).}
 }
 \value{
 \code{visual_prep} returns a list containing the following components:

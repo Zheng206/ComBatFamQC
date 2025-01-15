@@ -4,7 +4,7 @@
 #'
 #' @param age_list A list containing all ROIs' true volumes, age trend estimates, and the fitted GAMLSS model.
 #' @param features A vector of roi names.
-#' @param quantile_type A vector of quantile types.
+#' @param quantile_type A vector of quantile types (e.g., `c("quantile_25", "median", "quantile_75")`)
 #' @param use_plotly A boolean variable that indicates whether to display the age plot using the `plotly` package.
 #'
 #' @importFrom gamlss gamlss gamlss.control predictAll getQuantile ps pb
@@ -344,7 +344,7 @@ age_list_gen <- function(sub_df, lq = 0.25, hq = 0.75, mu = "smooth", sigma = "s
 #' }
 
 
-customize_percentile <- function(age_list, feature, q, s){
+customize_percentile <- function(age_list, feature, q = 0.75, s = "F"){
   mdl_sex <- age_list[[feature]]$model
   sub_df <- age_list[[feature]]$true_df
   min_age <- min(sub_df[["age"]])
@@ -381,7 +381,7 @@ customize_percentile <- function(age_list, feature, q, s){
 #' cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
 #' }
 
-cus_result_gen <- function(age_list, customized_q, f){
+cus_result_gen <- function(age_list, customized_q = 0.75, f){
   result <- age_list[[f]]
   cus_result <- lapply(c("F", "M"), function(x) customize_percentile(age_list, f, customized_q, x)) |> bind_rows()
   cus_result <- rbind(cus_result, result$predicted_df_sex %>% filter(.data[["type"]] == "median"))
@@ -427,7 +427,7 @@ cus_result_gen <- function(age_list, customized_q, f){
 #' )
 #' }
 
-age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE){
+age_trend_plot <- function(age_list, f, s = "none", q = "median", cus_list = NULL, use_plotly = TRUE){
   result <- age_list[[f]]
   pal <- c("coral", "olivedrab")
   pal <- setNames(pal, c("F", "M"))
@@ -442,7 +442,6 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
         marker = list(
           color = "rgba(70, 130, 150, 0.5)",
           size = 6
-          #line = list(color = "lightblue", width = 0.5)
         ),
         hoverinfo = "text",
         text = ~paste("Age: ", round(.data[["age"]], 2), "<br>Volume: ", round(.data[[f]],2)),
@@ -455,7 +454,6 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
         font = list(family = "Arial", size = 12)
       )
     if(q != "customization"){
-
       if(s == "none"){
         base_plot
       }else if(s == "F"){
@@ -481,7 +479,7 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
             mode = "lines",
             line = list(color = "olivedrab"),
             linetype = ~.data[["type"]],
-            hoverinfo = "text",  # Show custom hover text
+            hoverinfo = "text",
             text = ~paste("Age: ", round(.data[["age"]], 2), "<br>Volume: ", round(.data[["prediction"]], 2))
           )
       }else if(s == "F vs M"){
@@ -552,7 +550,6 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
         axis.text.x = element_text(size = 12, face = "bold"),
         axis.text.y = element_text(size = 12, face = "bold"),
       )
-
     if(q != "customization"){
       if(s == "none"){
         base_plot
@@ -564,7 +561,7 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
         base_plot + geom_line(data = result$predicted_df_sex %>% filter(.data[["type"]] == q), mapping = aes(x = .data[["age"]], y = .data[["prediction"]], color = .data[["sex"]])) +
           scale_color_manual(
             values = c("F" = "coral", "M" = "olivedrab"),
-            name = "Sex"  # Optional: specify the legend title
+            name = "Sex"
           )
       }
     }else{
@@ -620,7 +617,7 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
 #' @examples
 #' \dontrun{
 #' # Generate table for females at the 50th percentile
-#' age_table_gen(result, q = "quantile_50", s = "F")
+#' age_table_gen(result, q = "median", s = "F")
 #'
 #' # Generate comparison table for females vs. males at the 75th percentile
 #' age_table_gen(result, q = "quantile_75", s = "F vs M")
@@ -629,7 +626,7 @@ age_trend_plot <- function(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE
 #' @export
 
 
-age_table_gen <- function(result, q, s){
+age_table_gen <- function(result, q = "median", s = "F"){
   if(s == "F"){
     if("predicted_df_sex" %in% names(result)){
       age_table <- result$predicted_df_sex %>% filter(.data[["type"]] == q, .data[["sex"]] == "F") %>% dplyr::select(all_of(c("age", "prediction"))) %>% rename("Percentile.Volume" = "prediction", "Age" = "age")
@@ -692,8 +689,6 @@ age_table_gen <- function(result, q, s){
     )
   }
 
-  age_table_dt <- age_table %>% DT::datatable(options = list(dom = 'Bfrtip',
-                                                             buttons = c('csv', 'excel'), columnDefs = list(list(className = 'dt-center',
-                                                                                                                 targets = "_all"))), extensions = 'Buttons')
+  age_table_dt <- age_table %>% DT::datatable(options = list(dom = 'Bfrtip', buttons = c('csv', 'excel'), columnDefs = list(list(className = 'dt-center', targets = "_all"))), extensions = 'Buttons')
   return(age_table_dt)
 }

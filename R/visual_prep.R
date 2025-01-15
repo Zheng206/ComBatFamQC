@@ -2,19 +2,19 @@
 #'
 #' Prepare relevant datasets and statistical test results for batch/site effect diagnostic visualization.
 #'
-#' @param type The name of a regression model to be used in batch effect diagnostics stage: "lmer", "lm", "gam".
+#' @param type The name of a regression model to be used in batch effect diagnostics stage: `"lmer"`, `"lm"`, `"gam"`.
 #' @param features The name of the features to be evaluated.
 #' @param batch The name of the batch variable.
 #' @param covariates Name of covariates supplied to `model`.
-#' @param interaction Expression of interaction terms supplied to `model` (eg: "age,diagnosis").
+#' @param interaction Expression of interaction terms supplied to `model` (eg: `"age,diagnosis"`).
 #' @param random Variable name of a random effect in linear mixed effect model.
 #' @param smooth Variable name that requires a smooth function.
-#' @param smooth_int_type Indicates the type of interaction in `gam` models. By default, smooth_int_type is set to be "linear", representing linear interaction terms.
-#' "categorical-continuous", "factor-smooth" both represent categorical-continuous interactions ("factor-smooth" includes categorical variable as part of the smooth),
-#' "tensor" represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.
+#' @param smooth_int_type Indicates the type of interaction in `gam` models. By default, `smooth_int_type` is set to be `"linear"`, representing linear interaction terms.
+#' `"categorical-continuous"`, `"factor-smooth"` both represent categorical-continuous interactions (`"factor-smooth"` includes categorical variable as part of the smooth),
+#' `"tensor"` represents interactions with different scales, and `"smooth-smooth"` represents interaction between smoothed variables.
 #' @param df Dataset to be evaluated.
 #' @param cores number of cores used for parallel computing.
-#' @param mdmr A boolean variable indicating whether to run the MDMR test. By default, it is set to TRUE.
+#' @param mdmr A boolean variable indicating whether to run the MDMR test (default: `TRUE`).
 #'
 #' @return `visual_prep` returns a list containing the following components:
 #' \item{residual_add_df}{Residuals that might contain additive and multiplicative joint batch effects}

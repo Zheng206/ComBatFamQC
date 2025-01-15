@@ -4,7 +4,14 @@
 \alias{age_trend_plot}
 \title{Generate Age Trend Plot}
 \usage{
-age_trend_plot(age_list, f, s, q, cus_list = NULL, use_plotly = TRUE)
+age_trend_plot(
+  age_list,
+  f,
+  s = "none",
+  q = "median",
+  cus_list = NULL,
+  use_plotly = TRUE
+)
 }
 \arguments{
 \item{age_list}{A list containing all ROIs' true volumes, age trend estimates, and the fitted GAMLSS model.}

@@ -4,7 +4,7 @@
 \alias{customize_percentile}
 \title{Generate Predicted Quantiles for Age Trends}
 \usage{
-customize_percentile(age_list, feature, q, s)
+customize_percentile(age_list, feature, q = 0.75, s = "F")
 }
 \arguments{
 \item{age_list}{A list containing all ROIs' true volumes, age trend estimates, and the fitted GAMLSS model.}

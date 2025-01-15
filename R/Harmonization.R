@@ -8,14 +8,14 @@
 #' @param batch The name of the batch variable. Can be skipped if `result` is provided.
 #' @param covariates The names of covariates supplied to `model`. This can be be skipped if `result` is provided.
 #' @param df Dataset to be harmonized. This can be be skipped if `result` is provided.
-#' @param type The name of a regression model to be used in the ComBatFamily package: "lmer", "lm", "gam".
+#' @param type The name of a regression model to be used in the ComBatFamily package: `"lmer"`, `"lm"`, `"gam"`.
 #' @param random The variable name of a random effect in linear mixed effect model.
 #' @param smooth The name of the covariates that require a smooth function.
-#' @param interaction Expression of interaction terms supplied to `model` (eg: "age,diagnosis").
-#' @param smooth_int_type A vector that indicates the types of interaction in `gam` models. By default, smooth_int_type is set to be NULL, "linear" represents linear interaction terms.
-#' "categorical-continuous", "factor-smooth" both represent categorical-continuous interactions ("factor-smooth" includes categorical variable as part of the smooth),
-#' "tensor" represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.
-#' @param family The type of combat family to use, comfam or covfam.
+#' @param interaction Expression of interaction terms supplied to `model` (eg: `"age,diagnosis"`).
+#' @param smooth_int_type A vector that indicates the types of interaction in `gam` models. By default, `smooth_int_type` is set to be NULL, `"linear"` represents linear interaction terms.
+#' `"categorical-continuous"`, `"factor-smooth"` both represent categorical-continuous interactions (`"factor-smooth"` includes categorical variable as part of the smooth),
+#' `"tensor"` represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.
+#' @param family The type of combat family to use, `comfam` or `covfam`.
 #' @param eb If \code{TRUE}, uses ComBat model with empirical Bayes for mean and variance harmonization
 #' @param ref.batch The name of the reference batch.
 #' @param predict A boolean variable indicating whether to run ComBat from scratch or apply existing model to new dataset (currently only work for original ComBat and ComBat-GAM).

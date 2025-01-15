@@ -4,7 +4,7 @@
 \alias{age_table_gen}
 \title{Generate Age Trend Summary Table}
 \usage{
-age_table_gen(result, q, s)
+age_table_gen(result, q = "median", s = "F")
 }
 \arguments{
 \item{result}{A data object containing prediction results and metadata.}
@@ -45,7 +45,7 @@ The output table is formatted using the \code{DT} package with additional featur
 \examples{
 \dontrun{
 # Generate table for females at the 50th percentile
-age_table_gen(result, q = "quantile_50", s = "F")
+age_table_gen(result, q = "median", s = "F")
 
 # Generate comparison table for females vs. males at the 75th percentile
 age_table_gen(result, q = "quantile_75", s = "F vs M")

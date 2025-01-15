@@ -1,9 +1,9 @@
 #' Batch Effect Interactive Visualization
 #'
-#' Provide interactive batch/site effect visualization through Shiny app.
+#' Provides an interactive visualization of batch or site effects using a Shiny application.
 #'
 #' @param result A list derived from `visual_prep()` that contains datasets and statistical test results for Shiny visualization.
-#' @param after A boolean variable indicating whether the batch effect diagnostic occurs before or after harmonization. The default value is FALSE.
+#' @param after A boolean variable indicating whether the batch effect diagnostic occurs before or after harmonization (default: `FALSE`).
 #'
 #' @import ggplot2
 #' @import shiny

@@ -4,7 +4,7 @@
 \alias{cus_result_gen}
 \title{Generate Customized Predicted Quantiles List}
 \usage{
-cus_result_gen(age_list, customized_q, f)
+cus_result_gen(age_list, customized_q = 0.75, f)
 }
 \arguments{
 \item{age_list}{A list containing all ROIs' true volumes, age trend estimates, and the fitted GAMLSS model.}

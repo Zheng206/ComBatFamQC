@@ -2,15 +2,15 @@
 #'
 #' Extract residuals after harmonization.
 #'
-#' @param type A model function name that is to be used (eg: "lmer", "lm", "gam").
+#' @param type A model function name that is to be used (eg: `"lmer"`, `"lm"`, `"gam"`).
 #' @param features The names of the features from which to extract residuals.
 #' @param covariates Name of covariates supplied to `model`.
-#' @param interaction Expression of interaction terms supplied to `model` (eg: "age,diagnosis").
+#' @param interaction Expression of interaction terms supplied to `model` (eg: `"age,diagnosis"`).
 #' @param random Variable name of a random effect in linear mixed effect model.
 #' @param smooth Variable name that requires a smooth function.
-#' @param smooth_int_type Indicates the type of interaction in `gam` models. By default, smooth_int_type is set to be "linear", representing linear interaction terms.
-#' "categorical-continuous", "factor-smooth" both represent categorical-continuous interactions ("factor-smooth" includes categorical variable as part of the smooth),
-#' "tensor" represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.
+#' @param smooth_int_type Indicates the type of interaction in `gam` models. By default, `smooth_int_type` is set to be `"linear"`, representing linear interaction terms.
+#' `"categorical-continuous"`, `"factor-smooth"` both represent categorical-continuous interactions (`"factor-smooth"` includes categorical variable as part of the smooth),
+#' `"tensor"` represents interactions with different scales, and `"smooth-smooth"` represents interaction between smoothed variables.
 #' @param df Harmonized dataset to extract residuals from.
 #' @param rm variables to remove effects from.
 #' @param model A boolean variable indicating whether an existing model is to be used.

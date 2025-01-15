@@ -1,11 +1,11 @@
 Package: ComBatFamQC
-Title: Harmonization QC visualization
-Version: 0.0.1
+Title: Comprehensive Batch Effect Diagnostics and Harmonization
+Version: 1.0.0
 Authors@R: 
     person("Zheng", "Ren", , "zren1422@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0006-2430-4625"))
-Description: Streamline interactive batch effect diagnostics, harmonization, and post-harmonization downstream analysis to greatly simplify the data harmonization process and improve transparency and reproducibility. 
+Description: Provides a comprehensive framework for batch effect diagnostics, harmonization, and post-harmonization downstream analysis. Features include interactive visualization tools, robust statistical tests, and a range of harmonization techniques. Additionally, ComBatFamQC enables the creation of life-span age trend plots with estimated age-adjusted centiles and facilitates the generation of covariate-corrected residuals for analytical purposes.
 License: MIT + file LICENSE
-URL: https://github.com/Zheng206/ComBatFamQC
+URL: https://github.com/Zheng206/ComBatFamQC, https://zheng206.github.io/ComBatQC-Web/
 BugReports: https://github.com/Zheng206/ComBatFamQC/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

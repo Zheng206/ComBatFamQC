@@ -39,8 +39,6 @@ The ComBatFamQC package offers the following five key functionalities:
     -   ComBat-GAM (Pomponio et al., 2020)
     -   CovBat (Chen et al., 2021)
 
-![ComBatQC Shiny](/inst/figure/combat_shiny.png)
-
 -   **Interactive Visualization through R Shiny**: The ComBatFamQC package comes with an interactive visualization tool built on R Shiny, providing an intuitive user interface to explore and evaluate batch effects, as well as conduct interactive harmonization if needed. The output is organized into multiple tabs, which includes:
 
     -   **Data Overview**: Complete data overview and exploratory analysis
@@ -58,8 +56,6 @@ The ComBatFamQC package offers the following five key functionalities:
     Generate age trend of each brain structure (roi), adjusting sex and ICV. Customized centiles are enabled as well.
     -  **Age Trend Plots**
     -  **Age Trend Table** 
-
-![Age Shiny](/inst/figure/age_shiny.png)
 
 -   **Residual Generation** \
     Generate residual data set, removing specific covariates' effetcs.

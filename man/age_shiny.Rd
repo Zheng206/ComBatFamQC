@@ -11,7 +11,7 @@ age_shiny(age_list, features, quantile_type, use_plotly = TRUE)
 
 \item{features}{A vector of roi names.}
 
-\item{quantile_type}{A vector of quantile types.}
+\item{quantile_type}{A vector of quantile types (e.g., \code{c("quantile_25", "median", "quantile_75")})}
 
 \item{use_plotly}{A boolean variable that indicates whether to display the age plot using the \code{plotly} package.}
 }

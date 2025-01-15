@@ -39,19 +39,19 @@ combat_harm(
 
 \item{df}{Dataset to be harmonized. This can be be skipped if \code{result} is provided.}
 
-\item{type}{The name of a regression model to be used in the ComBatFamily package: "lmer", "lm", "gam".}
+\item{type}{The name of a regression model to be used in the ComBatFamily package: \code{"lmer"}, \code{"lm"}, \code{"gam"}.}
 
 \item{random}{The variable name of a random effect in linear mixed effect model.}
 
 \item{smooth}{The name of the covariates that require a smooth function.}
 
-\item{interaction}{Expression of interaction terms supplied to \code{model} (eg: "age,diagnosis").}
+\item{interaction}{Expression of interaction terms supplied to \code{model} (eg: \code{"age,diagnosis"}).}
 
-\item{smooth_int_type}{A vector that indicates the types of interaction in \code{gam} models. By default, smooth_int_type is set to be NULL, "linear" represents linear interaction terms.
-"categorical-continuous", "factor-smooth" both represent categorical-continuous interactions ("factor-smooth" includes categorical variable as part of the smooth),
-"tensor" represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.}
+\item{smooth_int_type}{A vector that indicates the types of interaction in \code{gam} models. By default, \code{smooth_int_type} is set to be NULL, \code{"linear"} represents linear interaction terms.
+\code{"categorical-continuous"}, \code{"factor-smooth"} both represent categorical-continuous interactions (\code{"factor-smooth"} includes categorical variable as part of the smooth),
+\code{"tensor"} represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.}
 
-\item{family}{The type of combat family to use, comfam or covfam.}
+\item{family}{The type of combat family to use, \code{comfam} or \code{covfam}.}
 
 \item{eb}{If \code{TRUE}, uses ComBat model with empirical Bayes for mean and variance harmonization}
 

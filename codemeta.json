@@ -2,12 +2,13 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "identifier": "ComBatFamQC",
-  "description": "Streamline interactive batch effect diagnostics, harmonization, and post-harmonization downstream analysis to greatly simplify the data harmonization process and improve transparency and reproducibility. ",
-  "name": "ComBatFamQC: Harmonization QC visualization",
+  "description": "Provides a comprehensive framework for batch effect diagnostics, harmonization, and post-harmonization downstream analysis. Features include interactive visualization tools, robust statistical tests, and a range of harmonization techniques. Additionally, ComBatFamQC enables the creation of life-span age trend plots with estimated age-adjusted centiles and facilitates the generation of covariate-corrected residuals for analytical purposes.",
+  "name": "ComBatFamQC: Comprehensive Batch Effect Diagnostics and Harmonization",
+  "relatedLink": "https://zheng206.github.io/ComBatQC-Web/",
   "codeRepository": "https://github.com/Zheng206/ComBatFamQC",
   "issueTracker": "https://github.com/Zheng206/ComBatFamQC/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
@@ -393,6 +394,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4932.818KB",
-  "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md"
+  "fileSize": "4934.773KB",
+  "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
+  "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"]
 }
