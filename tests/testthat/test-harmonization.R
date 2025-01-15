@@ -53,3 +53,10 @@ test_that("Harmonization functions work correctly", {
   expect_type(reference_model, "list")
   expect_type(reference_model, "list")
 })
+
+
+test_that("Prediction functions work correctly", {
+  com_out <- comfam(iris[1:75,1:2], iris$Species[1:75])
+  out_pred <- predict(com_out, iris[76:150,1:2], iris$Species[76:150])
+  expect_type(out_pred, "list")
+})

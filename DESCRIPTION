@@ -1,8 +1,11 @@
 Package: ComBatFamQC
 Title: Comprehensive Batch Effect Diagnostics and Harmonization
 Version: 1.0.0
-Authors@R: 
-    person("Zheng", "Ren", , "zren1422@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0006-2430-4625"))
+Authors@R: c(
+    person("Zheng", "Ren", email = "zren1422@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0006-2430-4625")),
+    person("Andrew", "Chen", email = "chen1764@gmail.com", role = c("aut", "cph")),
+    person("Elizabeth", "Horwath", email = "elizabeth.horwath@pennmedicine.upenn.edu", role = c("ctb"))
+    )
 Description: Provides a comprehensive framework for batch effect diagnostics, harmonization, and post-harmonization downstream analysis. Features include interactive visualization tools, robust statistical tests, and a range of harmonization techniques. Additionally, ComBatFamQC enables the creation of life-span age trend plots with estimated age-adjusted centiles and facilitates the generation of covariate-corrected residuals for analytical purposes.
 License: MIT + file LICENSE
 URL: https://github.com/Zheng206/ComBatFamQC, https://zheng206.github.io/ComBatQC-Web/
@@ -31,9 +34,7 @@ Imports:
     methods,
     gamlss.dist,
     invgamma,
-    ComBatFamily,
     openxlsx
-Remotes: andy1764/ComBatFamily
 Depends: 
     R (>= 3.5.0)
 LazyData: true
@@ -45,6 +46,8 @@ Suggests:
     remotes,
     shinytest2,
     plotly,
-    quarto
+    quarto,
+    spelling
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Language: en-US

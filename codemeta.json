@@ -22,6 +22,20 @@
       "familyName": "Ren",
       "email": "zren1422@gmail.com",
       "@id": "https://orcid.org/0009-0006-2430-4625"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Andrew",
+      "familyName": "Chen",
+      "email": "chen1764@gmail.com"
+    }
+  ],
+  "contributor": [
+    {
+      "@type": "Person",
+      "givenName": "Elizabeth",
+      "familyName": "Horwath",
+      "email": "elizabeth.horwath@pennmedicine.upenn.edu"
     }
   ],
   "copyrightHolder": [
@@ -31,6 +45,12 @@
       "familyName": "Ren",
       "email": "zren1422@gmail.com",
       "@id": "https://orcid.org/0009-0006-2430-4625"
+    },
+    {
+      "@type": "Person",
+      "givenName": "Andrew",
+      "familyName": "Chen",
+      "email": "chen1764@gmail.com"
     }
   ],
   "maintainer": [
@@ -139,6 +159,18 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=quarto"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "spelling",
+      "name": "spelling",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=spelling"
     }
   ],
   "softwareRequirements": {
@@ -370,12 +402,6 @@
     },
     "21": {
       "@type": "SoftwareApplication",
-      "identifier": "ComBatFamily",
-      "name": "ComBatFamily",
-      "sameAs": "https://github.com/andy1764/ComBatFamily"
-    },
-    "22": {
-      "@type": "SoftwareApplication",
       "identifier": "openxlsx",
       "name": "openxlsx",
       "provider": {
@@ -386,7 +412,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=openxlsx"
     },
-    "23": {
+    "22": {
       "@type": "SoftwareApplication",
       "identifier": "R",
       "name": "R",
@@ -394,7 +420,9 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4934.773KB",
+  "fileSize": "4962.438KB",
+  "releaseNotes": "https://github.com/Zheng206/ComBatFamQC/blob/master/NEWS.md",
   "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
-  "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"]
+  "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"],
+  "keywords": ["harmonization", "diagnostic-tool", "rshinyapp"]
 }

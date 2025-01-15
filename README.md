@@ -53,7 +53,7 @@ The ComBatFamQC package offers the following five key functionalities:
 2. <u>**Post-Harmonization Downstream Analysis**</u>
 
 -   **Age Trajectory** \
-    Generate age trend of each brain structure (roi), adjusting sex and ICV. Customized centiles are enabled as well.
+    Generate age trend of each brain structure (ROI), adjusting sex and ICV. Customized centiles are enabled as well.
     -  **Age Trend Plots**
     -  **Age Trend Table** 
 
@@ -70,13 +70,8 @@ if (!require("devtools", quietly = TRUE)) {
 
 library(devtools)
 
-# Method 1: install ComBatFamily and ComBatFamQC seperatelly
-devtools::install_github("andy1764/ComBatFamily")
 devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
 
-# Method 2: First, install ComBatFamQC without vignettes, then reinstall it with vignette building enabled.
-devtools::install_github("Zheng206/ComBatFamQC")
-devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE, force = TRUE)
 ```
 
 ## Tutorial

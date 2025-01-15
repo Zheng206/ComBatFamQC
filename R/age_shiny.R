@@ -240,7 +240,7 @@ age_shiny <- function(age_list, features, quantile_type, use_plotly = TRUE){
 #' "smooth": ~ pb(age), "linear": ~ age, "default": ~ 1.
 #'
 #' @return `age_list_gen` returns a list containing the following components:
-#' \item{true_df}{a dataframe contains the true age and roi volume information}
+#' \item{true_df}{a dataframe contains the true age and ROI volume information}
 #' \item{predicted_df_sex}{a dataframe contains the estimated age trend adjusting sex and icv}
 #' \item{model}{the fitted GAMLSS model}
 #'

@@ -35,9 +35,9 @@ data(age_df)
 
 # Life Span Age Trend Visualization
 
-In this step, we need to generate a list of data sets for all rois. Each roi's data set contains four columns:
+In this step, we need to generate a list of data sets for all ROIs. Each ROI's data set contains four columns:
 
--   **roi.name**: roi value
+-   **roi.name**: ROI value
 -   **age**: subject's age info
 -   **sex**: subject's sex info
 -   **icv**: subject's intracranial volume
@@ -51,7 +51,7 @@ icv <- "ICV_baseline"
 age_df[[sex]] <- as.factor(age_df[[sex]])
 ```
 
-## Create a list of data sets for all rois
+## Create a list of data sets for all ROIs
 
 ```{r, eval = FALSE}
 # Create sub_df for different features
@@ -62,7 +62,7 @@ sub_df_list <- lapply(seq_len(length(features)), function(i){
   })
 ```
 
-## Create age trend estimation for all rois
+## Create age trend estimation for all ROIs
 
 ```{r, eval = FALSE}
 # For MAC users

@@ -26,7 +26,7 @@ The ComBatFamQC visualization includes three key functions:
 -   `combat_harm`: provides default harmonization methods from the ComBatFamily package.
 -   `comfam_shiny`: generate interactive visualization through Rshiny.
 
-The ComBatFamQC includes the following harmonziation methods:
+The ComBatFamQC includes the following harmonizationmethods:
 
 -   ComBat (Johnson et al., 2007)
 -   ComBat-GAM (Pomponio et al., 2020)
@@ -37,7 +37,7 @@ The ComBatFamQC includes the following harmonziation methods:
 # Set up
 
 
-Install the ComBatFamQC package and read in the data set to be harmonized. Adni data is used in the vignette for illustration. To be noticed, the data set should include at least the following columns:
+Install the ComBatFamQC package and read in the data set to be harmonized. ADNI data is used in the vignette for illustration. To be noticed, the data set should include at least the following columns:
 
 -   **batch** column
 -   **feature** columns (make sure univariate column is excluded)
