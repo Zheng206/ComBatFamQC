@@ -28,8 +28,8 @@ interaction_gen(
 \value{
 \code{interaction_gen} returns a list containing the following components:
 \item{interaction}{A vector of interaction terms to be included}
-\item{covariates}{Modefied covariates after expressing interaction terms}
-\item{smooth}{Modefied smooth terms after expressing interaction terms}
+\item{covariates}{Modified covariates after expressing interaction terms}
+\item{smooth}{Modified smooth terms after expressing interaction terms}
 }
 \description{
 Generate appropriate interaction terms for regression models.
