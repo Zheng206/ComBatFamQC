@@ -27,7 +27,8 @@
       "@type": "Person",
       "givenName": "Andrew",
       "familyName": "Chen",
-      "email": "chen1764@gmail.com"
+      "email": "chen1764@gmail.com",
+      "@id": "https://orcid.org/0000-0002-5027-6422"
     }
   ],
   "contributor": [
@@ -35,7 +36,8 @@
       "@type": "Person",
       "givenName": "Elizabeth",
       "familyName": "Horwath",
-      "email": "elizabeth.horwath@pennmedicine.upenn.edu"
+      "email": "elizabeth.horwath@pennmedicine.upenn.edu",
+      "@id": "https://orcid.org/0009-0009-1224-6984"
     }
   ],
   "copyrightHolder": [
@@ -50,7 +52,8 @@
       "@type": "Person",
       "givenName": "Andrew",
       "familyName": "Chen",
-      "email": "chen1764@gmail.com"
+      "email": "chen1764@gmail.com",
+      "@id": "https://orcid.org/0000-0002-5027-6422"
     }
   ],
   "maintainer": [
@@ -420,7 +423,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4969.032KB",
+  "fileSize": "4969.12KB",
   "releaseNotes": "https://github.com/Zheng206/ComBatFamQC/blob/master/NEWS.md",
   "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
   "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"],
