@@ -3,7 +3,8 @@ test_that("Launch Shiny App without error", {
   age_list <- readRDS("previous-results/age_list.rds")
 
   # Launch the Shiny app
-  app <- AppDriver$new(age_shiny(age_list = age_list, features = names(age_list), quantile_type = c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 100*0.75))), name = "age_shiny", variant = platform_variant())
+  app <- AppDriver$new(age_shiny(age_list = age_list, features = names(age_list), quantile_type = c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 100*0.75))), name = "age_shiny", variant = platform_variant(), load_timeout = 30000,
+                       shiny_args = list(port = 8080))
 
   # Check if the app launched without errors
   expect_true(!is.null(app))
