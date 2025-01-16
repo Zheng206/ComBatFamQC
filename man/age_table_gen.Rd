@@ -43,12 +43,20 @@ It calculates percentage changes in predicted volume values for easier interpret
 The output table is formatted using the \code{DT} package with additional features, such as CSV and Excel export options.
 }
 \examples{
-\dontrun{
-# Generate table for females at the 50th percentile
-age_table_gen(result, q = "median", s = "F")
+# Initialize result to NULL for safety
+age_list <- NULL
 
-# Generate comparison table for females vs. males at the 75th percentile
-age_table_gen(result, q = "quantile_75", s = "F vs M")
+# Check if the previous results file exists and load it
+if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+  age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+}
+
+# Use the result if it is available
+if (!is.null(age_list)) {
+  result <- age_list[[1]]
+  age_table_gen(result, q = "median", s = "F")
+} else {
+  message("Age list is NULL. Please ensure the file exists and is accessible.")
 }
 
 }

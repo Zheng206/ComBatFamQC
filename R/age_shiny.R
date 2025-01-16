@@ -26,8 +26,8 @@
 #' colnames(sub_df) <- c("y", "age", "sex", "icv")
 #' age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
 #' quantile_type <- c("quantile_25", "median", "quantile_75")
-#' \dontrun{
-#' age_shiny(age_list = age_list, features = "Volume_1", quantile_type = quantile_type)
+#' if(interactive()){
+#'   age_shiny(age_list = age_list, features = "Volume_1", quantile_type = quantile_type)
 #' }
 
 
@@ -339,10 +339,20 @@ age_list_gen <- function(sub_df, lq = 0.25, hq = 0.75, mu = "smooth", sigma = "s
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' customize_percentile(age_list, feature = "Volume_1", q = 0.5, s = "F")
+#' # Initialize result to NULL for safety
+#' age_list <- NULL
+#'
+#' # Check if the previous results file exists and load it
+#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
 #' }
-
+#'
+#' # Use the result if it is available
+#' if (!is.null(age_list)) {
+#'   customize_percentile(age_list, feature = "Volume_1", q = 0.5, s = "F")
+#' } else {
+#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
+#' }
 
 customize_percentile <- function(age_list, feature, q = 0.75, s = "F"){
   mdl_sex <- age_list[[feature]]$model
@@ -377,8 +387,19 @@ customize_percentile <- function(age_list, feature, q = 0.75, s = "F"){
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
+#' # Initialize result to NULL for safety
+#' age_list <- NULL
+#'
+#' # Check if the previous results file exists and load it
+#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+#' }
+#'
+#' # Use the result if it is available
+#' if (!is.null(age_list)) {
+#'   cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
+#' } else {
+#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
 #' }
 
 cus_result_gen <- function(age_list, customized_q = 0.75, f){
@@ -415,16 +436,27 @@ cus_result_gen <- function(age_list, customized_q = 0.75, f){
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' # Generate a plot for a specific feature and quantile
-#' age_trend_plot(
-#'   age_list = age_list,
-#'   f = "Volume_1",
-#'   s = "F",
-#'   q = "customization",
-#'   cus_list = customized_results,
-#'   use_plotly = TRUE
-#' )
+#' # Initialize result to NULL for safety
+#' age_list <- NULL
+#'
+#' # Check if the previous results file exists and load it
+#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+#' }
+#'
+#' # Use the result if it is available
+#' if (!is.null(age_list)) {
+#'   customized_results <- cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
+#'   age_trend_plot(
+#'     age_list = age_list,
+#'     f = "Volume_1",
+#'     s = "F",
+#'     q = "customization",
+#'     cus_list = customized_results,
+#'     use_plotly = TRUE
+#'   )
+#' } else {
+#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
 #' }
 
 age_trend_plot <- function(age_list, f, s = "none", q = "median", cus_list = NULL, use_plotly = TRUE){
@@ -615,12 +647,20 @@ age_trend_plot <- function(age_list, f, s = "none", q = "median", cus_list = NUL
 #' The output table is formatted using the `DT` package with additional features, such as CSV and Excel export options.
 #'
 #' @examples
-#' \dontrun{
-#' # Generate table for females at the 50th percentile
-#' age_table_gen(result, q = "median", s = "F")
+#' # Initialize result to NULL for safety
+#' age_list <- NULL
 #'
-#' # Generate comparison table for females vs. males at the 75th percentile
-#' age_table_gen(result, q = "quantile_75", s = "F vs M")
+#' # Check if the previous results file exists and load it
+#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+#' }
+#'
+#' # Use the result if it is available
+#' if (!is.null(age_list)) {
+#'   result <- age_list[[1]]
+#'   age_table_gen(result, q = "median", s = "F")
+#' } else {
+#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
 #' }
 #'
 #' @export

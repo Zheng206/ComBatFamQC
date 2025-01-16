@@ -509,7 +509,7 @@ model_gen <- function(y, type = "lm", batch = NULL, covariates = NULL, interacti
 #' @export
 #'
 #' @examples
-#' covariates = adni[, c("AGE", "SEX")]
+#' covariates <- adni[, c("AGE", "SEX")]
 #' form_gen(x = "lm", c = covariates)
 #'
 
@@ -560,13 +560,12 @@ form_gen <- function(x, c = NULL, i = NULL, random = NULL, smooth = NULL){
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' interaction_gen(type = "lm", covariates = c("AGE", "SEX", "DIAGNOSIS"),
 #' interaction = "AGE,DIAGNOSIS")
 #'
 #' interaction_gen(type = "gam", covariates = c("AGE", "SEX", "DIAGNOSIS"),
 #' smooth = "AGE", smooth_int_type = "linear", interaction = "AGE,DIAGNOSIS")
-#' }
+#'
 
 
 
@@ -645,12 +644,22 @@ interaction_gen <- function(type = "lm", covariates = NULL, smooth = NULL, inter
 #'
 #'
 #' @examples
-#' \dontrun{
-#' result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
-#' temp_dir <- tempdir()
-#' diag_save(temp_dir, result)
+#' # Initialize result to NULL for safety
+#' result <- NULL
+#'
+#' # Check if the previous results file exists and load it, or run `visual_prep`
+#' if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
+#'   result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
 #' }
-
+#'
+#' # Use the result if it is available
+#' if (!is.null(result)) {
+#'   temp_dir <- tempdir()
+#'   diag_save(temp_dir, result)
+#'   message("Diagnostics saved to: ", temp_dir)
+#' } else {
+#'   message("Result is NULL. Please ensure the file exists and is accessible.")
+#' }
 
 diag_save <- function(path, result, use_quarto = TRUE){
   quarto_package <- requireNamespace("quarto", quietly = TRUE)
@@ -720,11 +729,25 @@ diag_save <- function(path, result, use_quarto = TRUE){
 #'
 #'
 #' @examples
-#' \dontrun{
-#' age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-#' temp_dir <- tempdir()
-#' age_save(temp_dir, age_list )
+#' # Initialize result to NULL for safety
+#' age_list <- NULL
+#'
+#' # Check if the previous results file exists and load it
+#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
 #' }
+#'
+#' # Use the result if it is available
+#' if (!is.null(age_list)) {
+#'   temp_dir <- tempdir()
+#'   age_save(temp_dir, age_list)
+#'   message("Age trend table saved to: ", temp_dir)
+#' } else {
+#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
+#' }
+#'
+
+
 
 
 age_save <- function(path, age_list){
@@ -783,22 +806,26 @@ age_save <- function(path, age_list){
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' set.seed(123)
-#' sub_df <- data.frame(
-#'   age = seq(1, 20, length.out = 100),
-#'   height = 50 + 2.5 * seq(1, 20, length.out = 100) + rnorm(100, 0, 5)
-#' )
+#' if (requireNamespace("gamlss", quietly = TRUE)) {
+#'   library(gamlss)
+#'   set.seed(123)
+#'   sub_df <- data.frame(
+#'     age = seq(1, 20, length.out = 100),
+#'     height = 50 + 2.5 * seq(1, 20, length.out = 100) + rnorm(100, 0, 5)
+#'   )
 #'
-#' mdl <- gamlss(height ~ pb(age), data = sub_df, family = NO())
+#'   mdl <- gamlss(height ~ pb(age), data = sub_df, family = NO())
 #'
-#' quantile_function <- getQuantileRefactored(
-#'   obj = mdl,
-#'   term = "age",
-#'   quantile = c(0.25, 0.5, 0.75),
-#'   data = sub_df
-#' )
-#' }
+#'   quantile_function <- getQuantileRefactored(
+#'     obj = mdl,
+#'     term = "age",
+#'     quantile = c(0.25, 0.5, 0.75),
+#'     data = sub_df
+#'   )
+#'  }else{
+#'  message("The 'gamlss' package is not installed. Please install it to run this example.")
+#'  }
+
 
 getQuantileRefactored <- function(obj, term, quantile, data, n.points = 100, fixed.at = list()) {
   if (is.null(obj) || !inherits(obj, "gamlss"))

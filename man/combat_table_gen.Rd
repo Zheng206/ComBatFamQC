@@ -52,10 +52,21 @@ statistical test results, PCA summaries, and covariate distributions.
 The function dynamically generates tables based on the \code{table_name} parameter.
 }
 \examples{
-\dontrun{
-combat_table_gen(result, table_name = "data_overview")
-combat_table_gen(result, table_name = "cov_table", c = "Age")
-combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
+# Initialize result to NULL for safety
+result <- NULL
+
+# Check if the previous results file exists and load it, or run `visual_prep`
+if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
+  result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
+}
+
+# Use the result if it is available
+if (!is.null(result)) {
+  combat_table_gen(result, table_name = "data_overview")
+  combat_table_gen(result, table_name = "cov_table", c = "Age")
+  combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
+} else {
+  message("Result is NULL. Please ensure the file exists and is accessible.")
 }
 
 }

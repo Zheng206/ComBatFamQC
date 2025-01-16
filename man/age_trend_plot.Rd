@@ -43,15 +43,26 @@ It supports customization for quantile visualization and uses precomputed result
 for enhanced flexibility.
 }
 \examples{
-\dontrun{
-# Generate a plot for a specific feature and quantile
-age_trend_plot(
-  age_list = age_list,
-  f = "Volume_1",
-  s = "F",
-  q = "customization",
-  cus_list = customized_results,
-  use_plotly = TRUE
-)
+# Initialize result to NULL for safety
+age_list <- NULL
+
+# Check if the previous results file exists and load it
+if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+  age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+}
+
+# Use the result if it is available
+if (!is.null(age_list)) {
+  customized_results <- cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
+  age_trend_plot(
+    age_list = age_list,
+    f = "Volume_1",
+    s = "F",
+    q = "customization",
+    cus_list = customized_results,
+    use_plotly = TRUE
+  )
+} else {
+  message("Age list is NULL. Please ensure the file exists and is accessible.")
 }
 }

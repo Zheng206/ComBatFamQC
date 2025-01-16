@@ -44,20 +44,23 @@ It then computes the distribution parameters for the GAMLSS model and calculates
 quantile function for the distribution family.
 }
 \examples{
-\dontrun{
-set.seed(123)
-sub_df <- data.frame(
-  age = seq(1, 20, length.out = 100),
-  height = 50 + 2.5 * seq(1, 20, length.out = 100) + rnorm(100, 0, 5)
-)
+if (requireNamespace("gamlss", quietly = TRUE)) {
+  library(gamlss)
+  set.seed(123)
+  sub_df <- data.frame(
+    age = seq(1, 20, length.out = 100),
+    height = 50 + 2.5 * seq(1, 20, length.out = 100) + rnorm(100, 0, 5)
+  )
 
-mdl <- gamlss(height ~ pb(age), data = sub_df, family = NO())
+  mdl <- gamlss(height ~ pb(age), data = sub_df, family = NO())
 
-quantile_function <- getQuantileRefactored(
-  obj = mdl,
-  term = "age",
-  quantile = c(0.25, 0.5, 0.75),
-  data = sub_df
-)
-}
+  quantile_function <- getQuantileRefactored(
+    obj = mdl,
+    term = "age",
+    quantile = c(0.25, 0.5, 0.75),
+    data = sub_df
+  )
+ }else{
+ message("The 'gamlss' package is not installed. Please install it to run this example.")
+ }
 }

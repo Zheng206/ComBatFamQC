@@ -25,8 +25,8 @@
 #' result_lm <- visual_prep(type = "lm", features = colnames(adni)[43:53],
 #' batch = "manufac", covariates = c("AGE", "SEX", "DIAGNOSIS"),
 #' df = head(adni, 500), cores = 1)
-#' \dontrun{
-#' comfam_shiny(result = result_lm)
+#' if (interactive()) {
+#'   comfam_shiny(result = result_lm)
 #' }
 
 
@@ -950,9 +950,20 @@ comfam_shiny <- function(result, after = FALSE){
 #' - `"eb_scale"`: Empirical Bayes scale parameter density plots.
 #'
 #' @examples
-#' \dontrun{
-#' combat_plot_gen(result, f = "Feature1", plot_name = "batch_density")
-#' combat_plot_gen(result, f = "Feature1", c = "Age", plot_name = "cov_feature")
+#' # Initialize result to NULL for safety
+#' result <- NULL
+#'
+#' # Check if the previous results file exists and load it, or run `visual_prep`
+#' if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
+#'   result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
+#' }
+#'
+#' # Use the result if it is available
+#' if (!is.null(result)) {
+#'   combat_plot_gen(result, f = "Feature1", plot_name = "batch_density")
+#'   combat_plot_gen(result, f = "Feature1", c = "Age", plot_name = "cov_feature")
+#' } else {
+#'   message("Result is NULL. Please ensure the file exists and is accessible.")
 #' }
 #'
 #' @export
@@ -1507,10 +1518,21 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
 #' The function dynamically generates tables based on the `table_name` parameter.
 #'
 #' @examples
-#' \dontrun{
-#' combat_table_gen(result, table_name = "data_overview")
-#' combat_table_gen(result, table_name = "cov_table", c = "Age")
-#' combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
+#' # Initialize result to NULL for safety
+#' result <- NULL
+#'
+#' # Check if the previous results file exists and load it, or run `visual_prep`
+#' if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
+#'   result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
+#' }
+#'
+#' # Use the result if it is available
+#' if (!is.null(result)) {
+#'   combat_table_gen(result, table_name = "data_overview")
+#'   combat_table_gen(result, table_name = "cov_table", c = "Age")
+#'   combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
+#' } else {
+#'   message("Result is NULL. Please ensure the file exists and is accessible.")
 #' }
 #'
 #' @export

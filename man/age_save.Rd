@@ -18,9 +18,21 @@ This function does not return a value. It saves the data to the specified file.
 Save all brain age trends into a single Excel file.
 }
 \examples{
-\dontrun{
-age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-temp_dir <- tempdir()
-age_save(temp_dir, age_list )
+# Initialize result to NULL for safety
+age_list <- NULL
+
+# Check if the previous results file exists and load it
+if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+  age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
 }
+
+# Use the result if it is available
+if (!is.null(age_list)) {
+  temp_dir <- tempdir()
+  age_save(temp_dir, age_list)
+  message("Age trend table saved to: ", temp_dir)
+} else {
+  message("Age list is NULL. Please ensure the file exists and is accessible.")
+}
+
 }

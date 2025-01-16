@@ -28,7 +28,18 @@ The predictions are computed over a sequence of ages (\code{age_test}) that span
 The function adjusts for fixed covariates such as \code{icv} by using their mean values from the input data.
 }
 \examples{
-\dontrun{
-customize_percentile(age_list, feature = "Volume_1", q = 0.5, s = "F")
+# Initialize result to NULL for safety
+age_list <- NULL
+
+# Check if the previous results file exists and load it
+if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
+  age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+}
+
+# Use the result if it is available
+if (!is.null(age_list)) {
+  customize_percentile(age_list, feature = "Volume_1", q = 0.5, s = "F")
+} else {
+  message("Age list is NULL. Please ensure the file exists and is accessible.")
 }
 }

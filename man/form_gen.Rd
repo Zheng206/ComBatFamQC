@@ -24,7 +24,7 @@ A string of formula
 Generate appropriate formula for ComBatFamily models
 }
 \examples{
-covariates = adni[, c("AGE", "SEX")]
+covariates <- adni[, c("AGE", "SEX")]
 form_gen(x = "lm", c = covariates)
 
 }

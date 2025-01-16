@@ -31,7 +31,7 @@ sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
 colnames(sub_df) <- c("y", "age", "sex", "icv")
 age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
 quantile_type <- c("quantile_25", "median", "quantile_75")
-\dontrun{
-age_shiny(age_list = age_list, features = "Volume_1", quantile_type = quantile_type)
+if(interactive()){
+  age_shiny(age_list = age_list, features = "Volume_1", quantile_type = quantile_type)
 }
 }
