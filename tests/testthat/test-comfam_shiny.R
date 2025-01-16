@@ -122,14 +122,7 @@ test_that("Launch Shiny App without error", {
   app$expect_screenshot()
   app$set_inputs(com_type = "covfam")
   app$set_inputs(com_model = "gam")
-  #app$wait_for_value(output = "com_model_note", timeout = 10000)
-  #app$wait_for_value(output = "smooth_int_type_control_note", timeout = 10000)
   app$expect_screenshot()
-
-  #app$set_inputs(com_type = "comfam")
-  #app$set_inputs(com_model = "lmer")
-  #app$wait_for_value(output = "com_model_note")
-  #app$expect_screenshot()
 
   app$set_inputs(eb_control = "Yes")
   app$click("eb_check_button")

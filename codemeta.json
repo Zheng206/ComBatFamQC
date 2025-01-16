@@ -420,7 +420,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4962.438KB",
+  "fileSize": "4969.164KB",
   "releaseNotes": "https://github.com/Zheng206/ComBatFamQC/blob/master/NEWS.md",
   "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
   "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"],

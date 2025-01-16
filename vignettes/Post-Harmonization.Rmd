@@ -56,7 +56,7 @@ age_df[[sex]] <- as.factor(age_df[[sex]])
 ```{r, eval = FALSE}
 # Create sub_df for different features
 sub_df_list <- lapply(seq_len(length(features)), function(i){
-    sub_df <- df[,c(features[i], age, sex, icv)] %>% na.omit()
+    sub_df <- age_df[,c(features[i], age, sex, icv)] %>% na.omit()
     colnames(sub_df) <- c(features[i], "age", "sex", "icv")
     return(sub_df)
   })
@@ -66,6 +66,7 @@ sub_df_list <- lapply(seq_len(length(features)), function(i){
 
 ```{r, eval = FALSE}
 # For MAC users
+library(parallel)
 age_list <- mclapply(seq_len(length(features)), function(w){
   age_sub <- age_list_gen (sub_df = sub_df_list[[w]],  lq = 0.25, hq = 0.75)
   return(age_sub)
