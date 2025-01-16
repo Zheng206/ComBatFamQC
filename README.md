@@ -33,7 +33,7 @@ The ComBatFamQC package offers the following five key functionalities:
 
 -   **Batch Effect Diagnostics**: ComBatFamQC provides two types of batch effect diagnostics methods for both individual batch effects and global batch effects: 1) *Qualitative Visualization* and 2) *Statistical Testing*. It simplifies the process of performing statistical analyses to detect potential batch effects and provides all relevant statistical test results for batch effect visualization and evaluation.
 
--   **Harmonization**: ComBatFamQC also provides four types of commonly used harmonization techniques, integrated through the [ComBatFamily](https://github.com/andy1764/ComBatFamily) package developed by Dr. Andrew Chen, for users to consider. The four harmonization techniques include: 
+-   **Harmonization**: ComBatFamQC also provides four types of commonly used harmonization techniques, integrated through the [ComBatFamily](https://github.com/andy1764/ComBatFamily) package developed by **Dr. Andrew Chen**, for users to consider. The four harmonization techniques include: 
     -   Original ComBat (Johnson et al., 2007)
     -   Longitudinal ComBat (Beer et al., 2020)
     -   ComBat-GAM (Pomponio et al., 2020)
@@ -80,3 +80,5 @@ devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
 vignette("ComBatQC")
 vignette("Post-Harmonization")
 ```
+
+

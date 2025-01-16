@@ -1,11 +1,7 @@
 suppressMessages(library(argparser))
 suppressMessages(library(tidyverse))
-suppressMessages(library(dplyr))
 suppressMessages(library(readxl))
-suppressMessages(library(ComBatFamily))
 suppressMessages(library(ComBatFamQC))
-#suppressMessages(library(lme4))
-#suppressMessages(library(mgcv))
 suppressMessages(library(parallel))
 
 ## Read in arguments
