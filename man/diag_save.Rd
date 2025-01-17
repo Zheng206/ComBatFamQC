@@ -20,14 +20,17 @@ This function does not return a value. It saves the data to the specified file.
 Save all the batch effect diagnosis results in a single Excel file or a Quarto report.
 }
 \examples{
-result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
-batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
-temp_dir <- tempfile()
-dir.create(temp_dir)
-diag_save(temp_dir, result)
-message("Diagnostics saved to: ", temp_dir)
+if(interactive()){
+  result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+  batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
+  temp_dir <- tempfile()
+  dir.create(temp_dir)
+  diag_save(temp_dir, result, quarto = FALSE)
+  message("Diagnostics saved to: ", temp_dir)
+  unlink(temp_dir, recursive = TRUE)  # Clean up the temporary directory
+}
 \dontshow{
-# Clean up the temporary file
-unlink(temp_dir, recursive = TRUE)
+# Ensure temp_dir exists before attempting cleanup
+if (exists("temp_dir")) unlink(temp_dir, recursive = TRUE)
 }
 }

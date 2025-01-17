@@ -18,6 +18,7 @@ This function does not return a value. It saves the data to the specified file.
 Save all brain age trends into a single Excel file.
 }
 \examples{
+if(interactive()){
 sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
 colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
 age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
@@ -26,8 +27,9 @@ temp_dir <- tempfile()
 dir.create(temp_dir)
 age_save(temp_dir, age_list)
 message("Age trend table saved to: ", temp_dir)
-\dontshow{
-# Clean up the temporary file
 unlink(temp_dir, recursive = TRUE)
+}
+\dontshow{
+if (exists("temp_dir")) unlink(temp_dir, recursive = TRUE)
 }
 }

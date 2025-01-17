@@ -950,9 +950,9 @@ comfam_shiny <- function(result, after = FALSE){
 #' - `"eb_scale"`: Empirical Bayes scale parameter density plots.
 #'
 #' @examples
-#' result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
-#'  batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
 #' if(interactive()){
+#'  result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+#'  batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
 #'  combat_plot_gen(result, f = "thickness.left.cuneus", plot_name = "batch_density")
 #'  combat_plot_gen(result, f = "thickness.left.cuneus", c = "AGE", plot_name = "cov_feature")
 #' }
@@ -1509,9 +1509,9 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
 #' The function dynamically generates tables based on the `table_name` parameter.
 #'
 #' @examples
-#' result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
-#' batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
 #' if(interactive()){
+#'  result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+#'  batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
 #'  combat_table_gen(result, table_name = "cov_table", c = "AGE")
 #'  combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
 #'  }

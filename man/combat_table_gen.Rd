@@ -52,9 +52,9 @@ statistical test results, PCA summaries, and covariate distributions.
 The function dynamically generates tables based on the \code{table_name} parameter.
 }
 \examples{
-result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
-batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
 if(interactive()){
+ result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+ batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
  combat_table_gen(result, table_name = "cov_table", c = "AGE")
  combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
  }

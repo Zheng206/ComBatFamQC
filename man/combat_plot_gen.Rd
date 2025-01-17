@@ -82,9 +82,9 @@ The function dynamically generates plots based on the \code{plot_name} parameter
 }
 }
 \examples{
-result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
- batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
 if(interactive()){
+ result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+ batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
  combat_plot_gen(result, f = "thickness.left.cuneus", plot_name = "batch_density")
  combat_plot_gen(result, f = "thickness.left.cuneus", c = "AGE", plot_name = "cov_feature")
 }
