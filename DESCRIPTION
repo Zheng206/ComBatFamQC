@@ -1,12 +1,12 @@
 Package: ComBatFamQC
 Title: Comprehensive Batch Effect Diagnostics and Harmonization
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(
     person("Zheng", "Ren", email = "zren1422@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0006-2430-4625")),
     person("Andrew", "Chen", email = "chen1764@gmail.com", role = c("aut", "cph"), comment = c(ORCID = "0000-0002-5027-6422")),
     person("Elizabeth", "Horwath", email = "elizabeth.horwath@pennmedicine.upenn.edu", role = c("ctb"), comment = c(ORCID = "0009-0009-1224-6984"))
     )
-Description: Provides a comprehensive framework for batch effect diagnostics, harmonization, and post-harmonization downstream analysis. Features include interactive visualization tools, robust statistical tests, and a range of harmonization techniques. Additionally, ComBatFamQC enables the creation of life-span age trend plots with estimated age-adjusted centiles and facilitates the generation of covariate-corrected residuals for analytical purposes.
+Description: Provides a comprehensive framework for batch effect diagnostics, harmonization, and post-harmonization downstream analysis. Features include interactive visualization tools, robust statistical tests, and a range of harmonization techniques. Additionally, 'ComBatFamQC' enables the creation of life-span age trend plots with estimated age-adjusted centiles and facilitates the generation of covariate-corrected residuals for analytical purposes. Methods for harmonization are based on approaches described in Johnson et al., (2007) <doi:10.1093/biostatistics/kxj037>, Beer et al., (2020) <doi:10.1016/j.neuroimage.2020.117129>, Pomponio et al., (2020) <doi:10.1016/j.neuroimage.2019.116450>, and Chen et al., (2021) <doi:10.1002/hbm.25688>.
 License: MIT + file LICENSE
 URL: https://github.com/Zheng206/ComBatFamQC, https://zheng206.github.io/ComBatQC-Web/
 BugReports: https://github.com/Zheng206/ComBatFamQC/issues

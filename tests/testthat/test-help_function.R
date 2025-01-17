@@ -67,7 +67,7 @@ test_that("Data preparation function works correctly", {
   expect_equal(prep_result_gam$smooth_orig, "AGE")
   expect_equal(dim(prep_result_gam$summary_df), c(3, 4))
 
-  result <- readRDS("previous-results/lm_result.rds")
+  result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
 
   ### With Result
   prep_result_w <- data_prep(stage = "harmonization", result = result, type = "lm", random = NULL,
@@ -101,7 +101,7 @@ test_that("Data preparation function works correctly", {
                                      covariates = covariates, df = adni, type = "gam", random = NULL,
                                      smooth = "AGE", interaction = interaction, smooth_int_type = "linear", predict = FALSE, object = NULL)
 
-  saved_model_post <- readRDS("previous-results/result_residual_model_lm.rds")
+  saved_model_post <- readRDS(testthat::test_path("previous-results/result_residual_model_lm.rds"))
   prep_result_post_w_model <- data_prep(stage = "post-harmonization", df = adni, predict = TRUE, object = saved_model_post)
   expect_identical(prep_result_post$batch, prep_result_post_w_model$batch)
   expect_identical(prep_result_post$features, prep_result_post_w_model$features)
@@ -214,8 +214,9 @@ test_that("Interaction Term Generation function works correctly", {
 })
 
 test_that("Exporting diagnosis result works correctly", {
-  result <- readRDS("previous-results/lm_result.rds")
-  temp_dir <- tempdir()
+  result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
+  temp_dir <- tempfile()
+  dir.create(temp_dir)
   diag_save(temp_dir, result, use_quarto = FALSE)
   output_path <- file.path(temp_dir, "diagnosis.xlsx")
   expect_true(file.exists(output_path))
@@ -226,15 +227,18 @@ test_that("Exporting diagnosis result works correctly", {
     output_path <- file.path(temp_dir, "diagnosis_report.html")
     expect_true(file.exists(output_path))
   }
+  unlink(temp_dir, recursive = TRUE)
 })
 
 
 test_that("Exporting age trend table works correctly", {
-  age_list <- readRDS("previous-results/age_list.rds")
-  temp_dir <- tempdir()
+  age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
+  temp_dir <- tempfile()
+  dir.create(temp_dir)
   age_save(temp_dir, age_list)
   output_path <- file.path(temp_dir, "age_trend.xlsx")
   expect_true(file.exists(output_path))
+  unlink(temp_dir, recursive = TRUE)
 })
 
 

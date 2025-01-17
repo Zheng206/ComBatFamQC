@@ -21,9 +21,8 @@
 #' user's default web browser. Execution is blocked until the app is closed.
 #'
 #' @examples
-#' features <- colnames(age_df)[c(6:56)]
-#' sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
-#' colnames(sub_df) <- c("y", "age", "sex", "icv")
+#' sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+#' colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
 #' age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
 #' quantile_type <- c("quantile_25", "median", "quantile_75")
 #' if(interactive()){
@@ -247,9 +246,8 @@ age_shiny <- function(age_list, features, quantile_type, use_plotly = TRUE){
 #' @export
 #'
 #' @examples
-#' features <- colnames(age_df)[c(6:56)]
-#' sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
-#' colnames(sub_df) <- c("y", "age", "sex", "icv")
+#' sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+#' colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
 #' age_list_gen(sub_df = sub_df)
 
 
@@ -339,20 +337,11 @@ age_list_gen <- function(sub_df, lq = 0.25, hq = 0.75, mu = "smooth", sigma = "s
 #' @export
 #'
 #' @examples
-#' # Initialize result to NULL for safety
-#' age_list <- NULL
-#'
-#' # Check if the previous results file exists and load it
-#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
-#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-#' }
-#'
-#' # Use the result if it is available
-#' if (!is.null(age_list)) {
-#'   customize_percentile(age_list, feature = "Volume_1", q = 0.5, s = "F")
-#' } else {
-#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
-#' }
+#' sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+#' colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
+#' age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+#' customize_percentile(age_list, feature = "Volume_1", q = 0.5, s = "F")
+
 
 customize_percentile <- function(age_list, feature, q = 0.75, s = "F"){
   mdl_sex <- age_list[[feature]]$model
@@ -387,20 +376,10 @@ customize_percentile <- function(age_list, feature, q = 0.75, s = "F"){
 #' @export
 #'
 #' @examples
-#' # Initialize result to NULL for safety
-#' age_list <- NULL
-#'
-#' # Check if the previous results file exists and load it
-#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
-#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-#' }
-#'
-#' # Use the result if it is available
-#' if (!is.null(age_list)) {
-#'   cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
-#' } else {
-#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
-#' }
+#' sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+#' colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
+#' age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+#' cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
 
 cus_result_gen <- function(age_list, customized_q = 0.75, f){
   result <- age_list[[f]]
@@ -436,28 +415,22 @@ cus_result_gen <- function(age_list, customized_q = 0.75, f){
 #' @export
 #'
 #' @examples
-#' # Initialize result to NULL for safety
-#' age_list <- NULL
+#' sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+#' colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
+#' age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+#' customized_results <- cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
 #'
-#' # Check if the previous results file exists and load it
-#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
-#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
+#' if(interactive()){
+#'  age_trend_plot(
+#'    age_list = age_list,
+#'    f = "Volume_1",
+#'    s = "F",
+#'    q = "customization",
+#'    cus_list = customized_results,
+#'    use_plotly = TRUE
+#'  )
 #' }
-#'
-#' # Use the result if it is available
-#' if (!is.null(age_list)) {
-#'   customized_results <- cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
-#'   age_trend_plot(
-#'     age_list = age_list,
-#'     f = "Volume_1",
-#'     s = "F",
-#'     q = "customization",
-#'     cus_list = customized_results,
-#'     use_plotly = TRUE
-#'   )
-#' } else {
-#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
-#' }
+
 
 age_trend_plot <- function(age_list, f, s = "none", q = "median", cus_list = NULL, use_plotly = TRUE){
   result <- age_list[[f]]
@@ -647,20 +620,12 @@ age_trend_plot <- function(age_list, f, s = "none", q = "median", cus_list = NUL
 #' The output table is formatted using the `DT` package with additional features, such as CSV and Excel export options.
 #'
 #' @examples
-#' # Initialize result to NULL for safety
-#' age_list <- NULL
-#'
-#' # Check if the previous results file exists and load it
-#' if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
-#'   age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-#' }
-#'
-#' # Use the result if it is available
-#' if (!is.null(age_list)) {
-#'   result <- age_list[[1]]
-#'   age_table_gen(result, q = "median", s = "F")
-#' } else {
-#'   message("Age list is NULL. Please ensure the file exists and is accessible.")
+#' sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+#' colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
+#' age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+#' result <- age_list[[1]]
+#' if(interactive()){
+#'  age_table_gen(result, q = "median", s = "F")
 #' }
 #'
 #' @export

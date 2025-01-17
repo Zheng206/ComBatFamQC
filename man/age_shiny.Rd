@@ -26,9 +26,8 @@ When this function is called, it starts a Shiny application in the
 user's default web browser. Execution is blocked until the app is closed.
 }
 \examples{
-features <- colnames(age_df)[c(6:56)]
-sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
-colnames(sub_df) <- c("y", "age", "sex", "icv")
+sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
 age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
 quantile_type <- c("quantile_25", "median", "quantile_75")
 if(interactive()){

@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # Introduction
 
-After harmonization, multiple-sites batch effect get controlled (or ideally eliminated). Some studies require further investigation of life span age trend of brain structures or other significant variable effects on brain structures. ComBatFamQC provides a post harmonization tool to:
+After harmonization, multiple-sites batch effect get controlled (or ideally eliminated). Some studies require further investigation of life span age trend of brain structures or other significant variable effects on brain structures. `ComBatFamQC` provides a post harmonization tool to:
 
 -   generate age trend estimation adjusting sex and icv: `age_list_gen`
 -   interactively visualize age trend: `age_shiny`
@@ -98,14 +98,16 @@ ComBatFamQC::age_shiny(age_list, features, quantile_type, use_plotly = FALSE)
 
 ```{r, eval=FALSE}
 # Save age trend table
-age_save(path = "path/to/save", age_list = age_list)
+temp_dir <- tempfile()
+dir.create(temp_dir)
+age_save(path = temp_dir, age_list = age_list)
 
 # Save GAMLSS Model
 gamlss_model <- lapply(seq_len(length(age_list)), function(i){
         g_model <- age_list[[i]]$model
         return(g_model)})
 names(gamlss_model) <- names(age_list)
-saveRDS(gamlss_model, file = "path/to/save/gamlss_model.rds")
+saveRDS(gamlss_model, file = file.path(temp_dir, "gamlss_model.rds"))
 ```
 
 # Residual Generation
@@ -132,16 +134,18 @@ Specify parameters carefully based on regression type and which covariates' effe
 result_residual <- residual_gen(type = "lm", features = features, covariates = covariates, interaction = interaction, smooth = NULL, df = harmonized_df, rm = c("timedays", "DIAGNOSIS"))
 
 # save residual data set
-write.csv(result_residual$residual, "path/to/save/residual.csv")
+write.csv(result_residual$residual, file.path(temp_dir, "residual.csv"))
 
 # save regression model
-saveRDS(result_residual$model, "path/to/save/regression_model.rds")
+saveRDS(result_residual$model, file.path(temp_dir, "regression_model.rds"))
 ```
 
 ### Generate residuals from existing model
 ```{r, eval=FALSE}
-result_residual <- residual_gen(df = harmonized_df, rm = c("timedays", "DIAGNOSIS"), model = TRUE, model_path = "path/to/save/regression_model.rds")
+result_residual <- residual_gen(df = harmonized_df, rm = c("timedays", "DIAGNOSIS"), model = TRUE, model_path = file.path(temp_dir, "regression_model.rds"))
 
 # save residual data set
-write.csv(result_residual$residual, "path/to/save/residual.csv")
+write.csv(result_residual$residual, file.path(temp_dir, "residual.csv"))
+# Clean up the temporary file
+unlink(temp_dir, recursive = TRUE)
 ```

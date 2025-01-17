@@ -1,6 +1,6 @@
 library(shinytest2)
 test_that("Launch Shiny App without error", {
-  age_list <- readRDS("previous-results/age_list.rds")
+  age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
 
   # Launch the Shiny app
   app <- AppDriver$new(age_shiny(age_list = age_list, features = names(age_list), quantile_type = c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 100*0.75))), name = "age_shiny", variant = platform_variant(), load_timeout = 30000,
@@ -56,10 +56,12 @@ test_that("Launch Shiny App without error", {
   app$click("Export")
   Sys.sleep(1.8)
   app$expect_screenshot()
+  unlink(temp_folder, recursive = TRUE)
 
   temp_gamlss_path <- tempfile(fileext = ".rds")
   app$set_inputs(gamlss_save_path = temp_gamlss_path)
   app$click("gamlss_model")
+  unlink(temp_gamlss_path, recursive = TRUE)
 
   # Stop the apps
   app$stop()
@@ -78,7 +80,7 @@ test_that("Age dataframe generated correctly", {
 
   age_sub <- age_list_gen(sub_df = age_sub_df,  lq = 0.25, hq = 0.75)
 
-  saved_age_list <- readRDS("previous-results/age_list.rds")
+  saved_age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
   expect_equal(age_sub$predicted_df_sex, saved_age_list[[1]]$predicted_df_sex, tolerance = 1e-8)
 
   age_sub_1 <- age_list_gen(sub_df = age_sub_df,  lq = 0.25, hq = 0.75, mu = "linear", sigma = "linear", tau = "smooth", nu = "smooth")
@@ -86,13 +88,13 @@ test_that("Age dataframe generated correctly", {
 })
 
 test_that("Age trend quantile generated correctly", {
-  age_list <- readRDS("previous-results/age_list.rds")
+  age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
   age_result <- customize_percentile(age_list, "Volume_2", 0.3, "F")
   expect_type(age_result, "list")
 })
 
 test_that("Age trend plot generated correctly", {
-  age_list <- readRDS("previous-results/age_list.rds")
+  age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
   plotly_package <- requireNamespace("plotly", quietly = TRUE)
   if(plotly_package){
     base_plot <- age_trend_plot(age_list, f = "Volume_1", s = "none", q = "median", use_plotly = TRUE)
@@ -131,7 +133,7 @@ test_that("Age trend plot generated correctly", {
 
 
 test_that("Age trend table generated correctly", {
-  age_list <- readRDS("previous-results/age_list.rds")
+  age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
   age_table_F_M <- age_table_gen(result = age_list$Volume_1, q = "median", s = "F vs M")
   expect_true("datatables" %in% class(age_table_F_M))
   expect_true(inherits(age_table_F_M, "htmlwidget"))

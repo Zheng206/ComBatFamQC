@@ -44,8 +44,7 @@ A GAMLSS model using a Box-Cox t distribution was fitted separately to rois of i
 to establish normative reference ranges as a function of age for the volume of a specific roi.
 }
 \examples{
-features <- colnames(age_df)[c(6:56)]
-sub_df <- age_df[,c(features[1], "age", "sex", "ICV_baseline")] |> na.omit()
-colnames(sub_df) <- c("y", "age", "sex", "icv")
+sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
 age_list_gen(sub_df = sub_df)
 }

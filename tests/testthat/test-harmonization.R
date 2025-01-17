@@ -10,7 +10,7 @@ test_that("Harmonization functions work correctly", {
 
   ### Original ComBat
   combat_model_lm <- combat_harm(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni)
-  harm_lm <- readRDS("previous-results/harm_lm.rds")
+  harm_lm <- readRDS(testthat::test_path("previous-results/harm_lm.rds"))
   expect_equal(combat_model_lm$harmonized_df[features], harm_lm[features], tolerance = 1e-8)
   prep_model_w <- data_prep(stage = "harmonization", df = adni, predict = TRUE, object = combat_model_lm$combat.object)
   expect_type(prep_model_w, "list")

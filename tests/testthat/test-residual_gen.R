@@ -21,7 +21,7 @@ test_that("Residual generation works correctly", {
 
 
   ## Use Saved Model
-  result_residual_saved_model <- residual_gen(model = TRUE, model_path = "previous-results/result_residual_model_lm.rds", df = harmonized_df, rm = c("timedays", "DIAGNOSIS", "SEX"), cores = 1)
+  result_residual_saved_model <- residual_gen(model = TRUE, model_path = testthat::test_path("previous-results/result_residual_model_lm.rds"), df = harmonized_df, rm = c("timedays", "DIAGNOSIS", "SEX"), cores = 1)
   result_residual_new_model <- residual_gen(type = "lm", features = features, covariates = covariates, interaction = interaction, smooth = NULL, df = harmonized_df, rm = c("timedays", "DIAGNOSIS", "SEX"), cores = 1)
   expect_equal(result_residual_saved_model$residual, result_residual_new_model$residual, tolerance = 1e-8)
 })

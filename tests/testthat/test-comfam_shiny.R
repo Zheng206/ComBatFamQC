@@ -1,6 +1,6 @@
 library(shinytest2)
 test_that("Launch Shiny App without error", {
-  result <- readRDS("previous-results/lm_result.rds")
+  result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   # Launch the Shiny app
   app <- AppDriver$new(comfam_shiny(result), name = "comfam_shiny", variant = platform_variant(), expect_values_screenshot_args = FALSE, load_timeout = 30000,
                        shiny_args = list(port = 8080))
@@ -143,7 +143,7 @@ test_that("Launch Shiny App without error", {
 })
 
 test_that("Batch effect diagnostics plot generated correctly", {
-  result <- readRDS("previous-results/lm_result.rds")
+  result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   features <- result$info$features
   batch_density_plot <- combat_plot_gen(result, features[1], plot_name = "batch_density")
   batch_density_plot_se <- combat_plot_gen(result, features[1], batch_control = "Yes", batch_level = c("GE", "Philips", "Siemens"), plot_name = "batch_density")
@@ -227,7 +227,7 @@ test_that("Batch effect diagnostics plot generated correctly", {
 
 
 test_that("Batch effect diagnostic table generated correctly", {
-  result <- readRDS("previous-results/lm_result.rds")
+  result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   features <- result$info$features
   data_overview_table <- combat_table_gen(result, table_name = "data_overview")
   expect_true("datatables" %in% class(data_overview_table))

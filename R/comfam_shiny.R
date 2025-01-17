@@ -409,7 +409,7 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     output$cov_text <- shiny::renderText({
-      print("No covariate is preserved")
+      "No covariate is preserved"
     })
 
     output$cov_plot <- shiny::renderPlot({
@@ -950,20 +950,11 @@ comfam_shiny <- function(result, after = FALSE){
 #' - `"eb_scale"`: Empirical Bayes scale parameter density plots.
 #'
 #' @examples
-#' # Initialize result to NULL for safety
-#' result <- NULL
-#'
-#' # Check if the previous results file exists and load it, or run `visual_prep`
-#' if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
-#'   result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
-#' }
-#'
-#' # Use the result if it is available
-#' if (!is.null(result)) {
-#'   combat_plot_gen(result, f = "Feature1", plot_name = "batch_density")
-#'   combat_plot_gen(result, f = "Feature1", c = "Age", plot_name = "cov_feature")
-#' } else {
-#'   message("Result is NULL. Please ensure the file exists and is accessible.")
+#' result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+#'  batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
+#' if(interactive()){
+#'  combat_plot_gen(result, f = "thickness.left.cuneus", plot_name = "batch_density")
+#'  combat_plot_gen(result, f = "thickness.left.cuneus", c = "AGE", plot_name = "cov_feature")
 #' }
 #'
 #' @export
@@ -1518,22 +1509,12 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
 #' The function dynamically generates tables based on the `table_name` parameter.
 #'
 #' @examples
-#' # Initialize result to NULL for safety
-#' result <- NULL
-#'
-#' # Check if the previous results file exists and load it, or run `visual_prep`
-#' if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
-#'   result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
-#' }
-#'
-#' # Use the result if it is available
-#' if (!is.null(result)) {
-#'   combat_table_gen(result, table_name = "data_overview")
-#'   combat_table_gen(result, table_name = "cov_table", c = "Age")
-#'   combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
-#' } else {
-#'   message("Result is NULL. Please ensure the file exists and is accessible.")
-#' }
+#' result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+#' batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
+#' if(interactive()){
+#'  combat_table_gen(result, table_name = "cov_table", c = "AGE")
+#'  combat_table_gen(result, table_name = "pc_variance", PC1 = "PC1", PC2 = "PC2")
+#'  }
 #'
 #' @export
 

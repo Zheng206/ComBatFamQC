@@ -18,15 +18,15 @@ knitr::opts_chunk$set(
 
 The need for larger samples in human subjects research have led to a trend of aggregating data across multiple locations (sites). This trend is especially prevalent in neuroimaging research. However, while the larger samples promoted greater power to detect significant associations as well as better generalizability of results, multiple-site study designs also introduce heterogeneity in acquisition and processing, which might consequently impact study findings.
 
-ComBat is used as the major harmonization technique in neuroimaging and the ComBat Family further extends the original ComBat methodology to enable flexible covariate modeling, leveraging efficient R implementations of regression models. However, it remains a challenge to evaluate potential batch effects as well as the performance of harmonization. ComBatFamQC provides a useful visualization tool through Rshiny for interactive batch effect diagnostics before and after harmonization. To streamline the harmonization process and improve efficiency, transparency, and reproducibility, ComBatFamQC also provides default harmonization methods by integrating the ComBatFamily package.
+ComBat is used as the major harmonization technique in neuroimaging and the ComBat Family further extends the original ComBat methodology to enable flexible covariate modeling, leveraging efficient R implementations of regression models. However, it remains a challenge to evaluate potential batch effects as well as the performance of harmonization. `ComBatFamQC` provides a useful visualization tool through Rshiny for interactive batch effect diagnostics before and after harmonization. To streamline the harmonization process and improve efficiency, transparency, and reproducibility, `ComBatFamQC` also provides default harmonization methods by integrating the `ComBatFamily` package.
 
-The ComBatFamQC visualization includes three key functions:
+The `ComBatFamQC` visualization includes three key functions:
 
 -   `visual_prep`: provides all relevant statistical test results for batch effect visualization and evaluation.
 -   `combat_harm`: provides default harmonization methods from the ComBatFamily package.
 -   `comfam_shiny`: generate interactive visualization through Rshiny.
 
-The ComBatFamQC includes the following harmonizationmethods:
+The `ComBatFamQC` includes the following harmonizationmethods:
 
 -   ComBat (Johnson et al., 2007)
 -   ComBat-GAM (Pomponio et al., 2020)
@@ -37,7 +37,7 @@ The ComBatFamQC includes the following harmonizationmethods:
 # Set up
 
 
-Install the ComBatFamQC package and read in the data set to be harmonized. ADNI data is used in the vignette for illustration. To be noticed, the data set should include at least the following columns:
+Install the `ComBatFamQC` package and read in the data set to be harmonized. ADNI data is used in the vignette for illustration. To be noticed, the data set should include at least the following columns:
 
 -   **batch** column
 -   **feature** columns (make sure univariate column is excluded)
@@ -94,13 +94,15 @@ There are two export options: 1) generate a Quarto report (requires Quarto to be
 
 ```{r, eval=FALSE}
 #library(quarto)
-diag_save(path = "path/to/dir", result = result_lmer, use_quarto = TRUE)
+temp_dir <- tempfile()
+dir.create(temp_dir)
+diag_save(path = temp_dir, result = result_lmer, use_quarto = TRUE)
 ```
 
 -   Generate a combined EXCEL file
 
 ```{r, eval=FALSE}
-diag_save(path = "path/to/dir", result = result_lmer, use_quarto = FALSE)
+diag_save(path = temp_dir, result = result_lmer, use_quarto = FALSE)
 ```
 
 # Harmonization Using default ComBatFamily Methods
@@ -131,10 +133,12 @@ combat_model_copy <- combat_harm(type = "lm", features = features, batch = batch
 identical(combat_model$harmonized_df, combat_model_copy$harmonized_df)
 
 # save harmonized data
-write.csv(combat_model$harmonized_df, "path/to/save/harmonized.csv")
+write.csv(combat_model$harmonized_df, file.path(temp_dir, "harmonized.csv"))
 
 # save combat model
-writeRDS(combat_model$combat.object, "path/to/save/combat_model.rds")
+saveRDS(combat_model$combat.object, file.path(temp_dir, "combat_model.rds"))
+# Clean up the temporary file
+unlink(temp_dir, recursive = TRUE)
 ```
 
 ### Longitudinal ComBat

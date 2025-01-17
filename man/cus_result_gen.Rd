@@ -25,18 +25,8 @@ This function utilizes the GAMLSS model to compute predictions for the specified
 The results include predictions for both the specified quantile and the median, enabling enhanced visualization.
 }
 \examples{
-# Initialize result to NULL for safety
-age_list <- NULL
-
-# Check if the previous results file exists and load it
-if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
-  age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-}
-
-# Use the result if it is available
-if (!is.null(age_list)) {
-  cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
-} else {
-  message("Age list is NULL. Please ensure the file exists and is accessible.")
-}
+sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
+age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+cus_result_gen(age_list, customized_q = 0.75, f = "Volume_1")
 }

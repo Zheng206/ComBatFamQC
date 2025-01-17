@@ -43,20 +43,12 @@ It calculates percentage changes in predicted volume values for easier interpret
 The output table is formatted using the \code{DT} package with additional features, such as CSV and Excel export options.
 }
 \examples{
-# Initialize result to NULL for safety
-age_list <- NULL
-
-# Check if the previous results file exists and load it
-if (file.exists("./tests/testthat/previous-results/age_list.rds")) {
-  age_list <- readRDS("./tests/testthat/previous-results/age_list.rds")
-}
-
-# Use the result if it is available
-if (!is.null(age_list)) {
-  result <- age_list[[1]]
-  age_table_gen(result, q = "median", s = "F")
-} else {
-  message("Age list is NULL. Please ensure the file exists and is accessible.")
+sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()
+colnames(sub_df) <- c("Volume_1", "age", "sex", "icv")
+age_list <- list("Volume_1" = age_list_gen(sub_df = sub_df))
+result <- age_list[[1]]
+if(interactive()){
+ age_table_gen(result, q = "median", s = "F")
 }
 
 }

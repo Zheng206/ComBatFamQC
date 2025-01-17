@@ -20,20 +20,14 @@ This function does not return a value. It saves the data to the specified file.
 Save all the batch effect diagnosis results in a single Excel file or a Quarto report.
 }
 \examples{
-# Initialize result to NULL for safety
-result <- NULL
-
-# Check if the previous results file exists and load it, or run `visual_prep`
-if (file.exists("./tests/testthat/previous-results/lm_result.rds")) {
-  result <- readRDS("./tests/testthat/previous-results/lm_result.rds")
-}
-
-# Use the result if it is available
-if (!is.null(result)) {
-  temp_dir <- tempdir()
-  diag_save(temp_dir, result)
-  message("Diagnostics saved to: ", temp_dir)
-} else {
-  message("Result is NULL. Please ensure the file exists and is accessible.")
+result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
+batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
+temp_dir <- tempfile()
+dir.create(temp_dir)
+diag_save(temp_dir, result)
+message("Diagnostics saved to: ", temp_dir)
+\dontshow{
+# Clean up the temporary file
+unlink(temp_dir, recursive = TRUE)
 }
 }

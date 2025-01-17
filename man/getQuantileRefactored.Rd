@@ -46,7 +46,6 @@ quantile function for the distribution family.
 \examples{
 if (requireNamespace("gamlss", quietly = TRUE)) {
   library(gamlss)
-  set.seed(123)
   sub_df <- data.frame(
     age = seq(1, 20, length.out = 100),
     height = 50 + 2.5 * seq(1, 20, length.out = 100) + rnorm(100, 0, 5)

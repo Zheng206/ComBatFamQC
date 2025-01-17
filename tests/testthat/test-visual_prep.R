@@ -5,7 +5,7 @@ test_that("Visualization preparation function works correctly", {
   interaction <- c("timedays,DIAGNOSIS")
   batch <- "manufac"
   result_orig <- visual_prep(type = "lm", features = features, batch = batch, covariates = covariates, interaction = interaction, smooth = NULL, random = NULL, df = adni, cores = 1)
-  saved_result_lm <- readRDS("previous-results/lm_result.rds")
+  saved_result_lm <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   expect_equal(result_orig$residual_add_df, saved_result_lm$residual_add_df, tolerance = 1e-8)
   expect_equal(result_orig$residual_ml_df, saved_result_lm$residual_ml_df, tolerance = 1e-8)
   expect_equal(result_orig$mdmr.summary, saved_result_lm$mdmr.summary, tolerance = 1e-8)
