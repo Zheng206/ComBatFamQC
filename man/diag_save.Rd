@@ -21,7 +21,7 @@ Save all the batch effect diagnosis results in a single Excel file or a Quarto r
 }
 \examples{
 result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
-batch = "manufac", covariates = "AGE", df = adni, mdmr = FALSE, cores = 1)
+batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
 temp_dir <- tempfile()
 dir.create(temp_dir)
 diag_save(temp_dir, result)
