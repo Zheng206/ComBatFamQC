@@ -8,13 +8,19 @@
   "codeRepository": "https://github.com/Zheng206/ComBatFamQC",
   "issueTracker": "https://github.com/Zheng206/ComBatFamQC/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
     "url": "https://r-project.org"
   },
   "runtimePlatform": "R version 4.4.1 (2024-06-14)",
+  "provider": {
+    "@id": "https://cran.r-project.org",
+    "@type": "Organization",
+    "name": "Comprehensive R Archive Network (CRAN)",
+    "url": "https://cran.r-project.org"
+  },
   "author": [
     {
       "@type": "Person",
@@ -419,11 +425,11 @@
       "@type": "SoftwareApplication",
       "identifier": "R",
       "name": "R",
-      "version": ">= 3.5.0"
+      "version": ">= 4.1.0"
     },
     "SystemRequirements": null
   },
-  "fileSize": "4967.019KB",
+  "fileSize": "4967.671KB",
   "releaseNotes": "https://github.com/Zheng206/ComBatFamQC/blob/master/NEWS.md",
   "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
   "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"],

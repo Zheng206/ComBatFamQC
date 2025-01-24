@@ -221,9 +221,10 @@ test_that("Exporting diagnosis result works correctly", {
   output_path <- file.path(temp_dir, "diagnosis.xlsx")
   expect_true(file.exists(output_path))
 
-  diag_save(temp_dir, result, use_quarto = TRUE)
   quarto_package <- requireNamespace("quarto", quietly = TRUE)
-  if(quarto_package){
+  quarto_missing <- is.null(Sys.which("quarto")[[1]])
+  if(quarto_package && !quarto_missing){
+    diag_save(temp_dir, result, use_quarto = TRUE)
     output_path <- file.path(temp_dir, "diagnosis_report.html")
     expect_true(file.exists(output_path))
   }

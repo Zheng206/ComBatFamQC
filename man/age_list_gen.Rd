@@ -15,7 +15,8 @@ age_list_gen(
 )
 }
 \arguments{
-\item{sub_df}{A two-column dataset that contains age and roi volume related information. column y: roi volumes, column age: age.}
+\item{sub_df}{A four-column dataset that contains age, sex, intracranial volume (ICV) and roi volume related information.
+The columns for age, sex, and ICV must be strictly named \code{"age"}, \code{"sex"}, and \code{"icv"}.}
 
 \item{lq}{The lower bound quantile. eg: 0.25, 0.05}
 
@@ -40,8 +41,9 @@ age_list_gen(
 \item{model}{the fitted GAMLSS model}
 }
 \description{
-A GAMLSS model using a Box-Cox t distribution was fitted separately to rois of interest,
-to establish normative reference ranges as a function of age for the volume of a specific roi.
+A GAMLSS model using a Normal distribution was fitted separately to rois of interest,
+to establish normative reference ranges for the volume of a specific ROI as a function of age,
+adjusting for sex and intracranial volume.
 }
 \examples{
 sub_df <- age_df[,c("Volume_1", "age", "sex", "ICV_baseline")] |> na.omit()

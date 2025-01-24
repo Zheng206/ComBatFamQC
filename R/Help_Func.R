@@ -678,6 +678,9 @@ diag_save <- function(path, result, use_quarto = TRUE){
       execute_params = list(data = result)
     )
   }else{
+    if (use_quarto && (!quarto_package || is.null(Sys.which("quarto")[[1]]))) {
+      warning("Quarto CLI or the `quarto` package is not available. Falling back to Excel output.")
+    }
     wb <- createWorkbook()
     header_style <- createStyle(textDecoration = "bold", fgFill = "#D3D3D3", halign = "center")
     addWorksheet(wb, "Batch Summary")
