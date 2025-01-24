@@ -1,4 +1,4 @@
-# ComBatFamQC 1.0.3
+# ComBatFamQC 1.0.4
 * Set the R dependency to require at least version 4.1.0.
 * Fixed CRAN build issues related to Quarto availability.
 * Resolved portability issues flagged during CRAN checks.

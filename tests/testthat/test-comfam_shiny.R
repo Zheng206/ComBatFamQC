@@ -3,7 +3,7 @@ test_that("Launch Shiny App without error", {
   result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   # Launch the Shiny app
   app <- AppDriver$new(comfam_shiny(result), name = "comfam_shiny", variant = platform_variant(), expect_values_screenshot_args = FALSE, load_timeout = 30000,
-                       shiny_args = list(port = 8081))
+                       shiny_args = list(port = NULL))
 
   # Check if the app launched without errors
   expect_true(!is.null(app))

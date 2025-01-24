@@ -1,7 +1,17 @@
-## Resubmission
-This is a resubmission of 'ComBatFamQC' (version 1.0.2) in response to CRAN comments.
+## Resubmission of version 1.0.4
 
-### Issues Addressed:
+## Change in version 1.0.4
+1. Set the R dependency to require at least version 4.1.0.
+2. Fixed CRAN build issues related to Quarto availability.
+3. Resolved portability issues flagged during CRAN checks.
+4. Modified the description of the age_list_gen() function.
+
+## Previous Submissions
+
+### Version 1.0.3
+1. Withdrawn due to unresolved issues flagged during M1 Mac testing.
+
+### Version 1.0.2
 1. Updated the package description to enclose the package name in single quotes: 'ComBatFamQC'.
 2. Added references in the description field to describe the methods, formatted per CRAN guidelines (e.g., authors (year) <doi:...>).
 3. Replaced all instances of `print()` with `message()` in `R/visual_prep.R` and `R/Help_Func.R` to align with CRAN's recommended practices for console output.
@@ -9,11 +19,11 @@ This is a resubmission of 'ComBatFamQC' (version 1.0.2) in response to CRAN comm
 5. Cleaned up all temporary files using `unlink()`.
 6. Optimized examples to ensure they run in less than 5 seconds.
 
-### Notes Addressed:
+### Version 1.0.1
+1. Did not pass the pre-check on CRAN.
 
-The flagged words (e.g., "Pomponio," "centiles," "et al.") are part of valid citations and technical terms used in the description.
 
-### R CMD check results
+## R CMD check results
 
 0 errors | 0 warnings | 0 notes
 
