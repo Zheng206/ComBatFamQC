@@ -1,6 +1,8 @@
 # ComBatFamQC 1.0.3
+* Set the R dependency to require at least version 4.1.0.
 * Fixed CRAN build issues related to Quarto availability.
 * Resolved portability issues flagged during CRAN checks.
+* Modified the description of the age_list_gen() function.
 
 # ComBatFamQC 1.0.2
 * Resolved CRAN build issues by optimizing test execution time to comply with runtime limits.

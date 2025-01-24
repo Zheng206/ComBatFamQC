@@ -213,7 +213,7 @@ comfam_shiny <- function(result, after = FALSE){
                          width = 12,
                          title = "T-SNE",
                          shiny::plotOutput("tsne")))),
-            tabPanel("Diagnosis of Individual Batch Effect", value = 5,
+            tabPanel("Diagnosis of Feature-level Batch Effect", value = 5,
                      fluidRow(
                        shinydashboard::box(
                          width = 12,
