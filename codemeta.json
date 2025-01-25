@@ -180,6 +180,18 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=spelling"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "httpuv",
+      "name": "httpuv",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=httpuv"
     }
   ],
   "softwareRequirements": {
@@ -429,7 +441,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4968.265KB",
+  "fileSize": "4968.481KB",
   "releaseNotes": "https://github.com/Zheng206/ComBatFamQC/blob/master/NEWS.md",
   "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
   "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"],

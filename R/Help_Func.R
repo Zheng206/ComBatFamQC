@@ -660,7 +660,7 @@ interaction_gen <- function(type = "lm", covariates = NULL, smooth = NULL, inter
 
 diag_save <- function(path, result, use_quarto = TRUE){
   quarto_package <- requireNamespace("quarto", quietly = TRUE)
-  quarto_path <- ifelse(quarto_package, quarto::quarto_path(), NULL)
+  if(quarto_package){quarto_path <- quarto::quarto_path()}else{quarto_path <- NULL}
   if (use_quarto && !is.null(quarto_path) && quarto_package) {
     original_dir <- getwd()
     template_path <- system.file("quarto_templates/diagnosis_report.qmd", package = "ComBatFamQC")
