@@ -222,7 +222,8 @@ test_that("Exporting diagnosis result works correctly", {
   expect_true(file.exists(output_path))
 
   quarto_package <- requireNamespace("quarto", quietly = TRUE)
-  quarto_missing <- is.null(Sys.which("quarto")[[1]])
+  quarto_path <- ifelse(quarto_package, quarto::quarto_path(), NULL)
+  quarto_missing <- is.null(quarto_path)
   if(quarto_package && !quarto_missing){
     diag_save(temp_dir, result, use_quarto = TRUE)
     output_path <- file.path(temp_dir, "diagnosis_report.html")

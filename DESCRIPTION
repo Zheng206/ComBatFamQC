@@ -47,7 +47,8 @@ Suggests:
     shinytest2,
     plotly,
     quarto,
-    spelling
+    spelling,
+    httpuv
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US
