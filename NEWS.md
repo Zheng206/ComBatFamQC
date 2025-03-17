@@ -1,3 +1,7 @@
+# ComBatFamQC 1.0.5
+* Revised unit tests for both com_shiny() and age_shiny() to use testthat and shiny, replacing shinytest2 for improved compatibility and maintainability.
+
+
 # ComBatFamQC 1.0.4
 * Set the R dependency to require at least version 4.1.0.
 * Fixed CRAN build issues related to Quarto availability.

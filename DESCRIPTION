@@ -1,6 +1,6 @@
 Package: ComBatFamQC
 Title: Comprehensive Batch Effect Diagnostics and Harmonization
-Version: 1.0.4
+Version: 1.0.5
 Authors@R: c(
     person("Zheng", "Ren", email = "zren1422@gmail.com", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0006-2430-4625")),
     person("Andrew", "Chen", email = "chen1764@gmail.com", role = c("aut", "cph"), comment = c(ORCID = "0000-0002-5027-6422")),
@@ -44,11 +44,9 @@ Suggests:
     devtools,
     testthat (>= 3.0.0),
     remotes,
-    shinytest2,
     plotly,
     quarto,
     spelling,
-    httpuv
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US

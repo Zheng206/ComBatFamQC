@@ -8,7 +8,7 @@
   "codeRepository": "https://github.com/Zheng206/ComBatFamQC",
   "issueTracker": "https://github.com/Zheng206/ComBatFamQC/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
@@ -135,18 +135,6 @@
     },
     {
       "@type": "SoftwareApplication",
-      "identifier": "shinytest2",
-      "name": "shinytest2",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=shinytest2"
-    },
-    {
-      "@type": "SoftwareApplication",
       "identifier": "plotly",
       "name": "plotly",
       "provider": {
@@ -180,18 +168,6 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=spelling"
-    },
-    {
-      "@type": "SoftwareApplication",
-      "identifier": "httpuv",
-      "name": "httpuv",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=httpuv"
     }
   ],
   "softwareRequirements": {
@@ -441,7 +417,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "4964.648KB",
+  "fileSize": "4964.797KB",
   "releaseNotes": "https://github.com/Zheng206/ComBatFamQC/blob/master/NEWS.md",
   "readme": "https://github.com/Zheng206/ComBatFamQC/blob/main/README.md",
   "contIntegration": ["https://github.com/Zheng206/ComBatFamQC/actions/workflows/R-CMD-check.yaml", "https://app.codecov.io/gh/Zheng206/ComBatFamQC"],

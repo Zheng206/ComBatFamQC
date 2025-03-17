@@ -1,12 +1,15 @@
-## Resubmission of version 1.0.4
+## Resubmission of version 1.0.5
 
-## Change in version 1.0.4
+## Change in version 1.0.5
+1. Revised unit tests for both com_shiny() and age_shiny() to use testthat and shiny, replacing shinytest2 for improved compatibility and maintainability.
+
+## Previous Submissions
+
+### Version 1.0.4
 1. Set the R dependency to require at least version 4.1.0.
 2. Fixed CRAN build issues related to Quarto availability.
 3. Resolved portability issues flagged during CRAN checks.
 4. Modified the description of the age_list_gen() function.
-
-## Previous Submissions
 
 ### Version 1.0.3
 1. Withdrawn due to unresolved issues flagged during M1 Mac testing.
