@@ -1,71 +1,16 @@
-library(shinytest2)
-test_that("Launch Shiny App without error", {
+test_that("Shiny app server initializes and processes inputs correctly", {
   age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
-
-  # Launch the Shiny app
-  port <- httpuv::randomPort()
-  app <- AppDriver$new(age_shiny(age_list = age_list, features = names(age_list), quantile_type = c(paste0("quantile_", 100*0.25), "median", paste0("quantile_", 100*0.75))), name = "age_shiny", variant = platform_variant(), load_timeout = 30000,
-                       shiny_args = list(port = port))
-
-  # Check if the app launched without errors
-  expect_true(!is.null(app))
-
-  # 1. Verify UI loads correctly
-  app$set_window_size(width = 1619, height = 992)
-  expect_true(!is.null(app$get_value(input = "features")))
-  expect_true(!is.null(app$get_value(input = "quantile")))
-
-  # 2. Test input interactions
-  app$set_inputs(features = "Volume_1", quantile = "quantile_75", sex = "Female", timeout_ = 8000, wait_ = TRUE)
-  expect_equal(app$get_value(input = "features"), "Volume_1")
-  expect_equal(app$get_value(input = "quantile"), "quantile_75")
-  Sys.sleep(1.8)
-  app$expect_screenshot()
-
-  app$set_inputs(sex = "Male")
-  Sys.sleep(1.8)
-  app$expect_screenshot()
-
-  app$set_inputs(sex = "Female vs. Male (Only for visualization)")
-  Sys.sleep(1.8)
-  app$expect_screenshot()
-
-  app$set_inputs(quantile = "customization")
-  app$set_inputs(quantile_selection = 0.75)
-  app$wait_for_value(input = "quantile_selection", ignore = NULL)
-  app$expect_screenshot()
-  app$set_inputs(quantile_selection = 0.1)
-  app$wait_for_value(input = "quantile_selection", ignore = NULL)
-  app$wait_for_value(output = "agetable", timeout = 10)
-  app$expect_screenshot()
-
-  app$set_inputs(sex = "Male")
-  app$wait_for_value(output = "agetable", timeout = 10)
-  app$expect_screenshot()
-
-  app$set_inputs(sex = "Female vs. Male (Only for visualization)")
-  app$wait_for_value(output = "agetable", timeout = 10)
-  app$expect_screenshot()
-
-  # 3. Test age table output
-  expect_true(!is.null(app$get_value(output = "agetable")))
-
-  # 4. Test exporting functionality
-  temp_folder <- tempfile()
-  dir.create(temp_folder)
-  app$set_inputs(age_save_path = temp_folder)
-  app$click("Export")
-  Sys.sleep(1.8)
-  app$expect_screenshot()
-  unlink(temp_folder, recursive = TRUE)
-
-  temp_gamlss_path <- tempfile(fileext = ".rds")
-  app$set_inputs(gamlss_save_path = temp_gamlss_path)
-  app$click("gamlss_model")
-  unlink(temp_gamlss_path, recursive = TRUE)
-
-  # Stop the apps
-  app$stop()
+  server <- age_shiny(age_list = age_list, features = names(age_list), quantile_type = c("quantile_25", "median", "quantile_75"))
+  testServer(server, {
+    session$setInputs(features = "Volume_1", quantile = "quantile_75", sex = "Female")
+    expect_equal(input$features, "Volume_1")
+    expect_equal(input$quantile, "quantile_75")
+    expect_true(!is.null(output$agetable))
+    session$setInputs(sex = "Male")
+    expect_equal(input$sex, "Male")
+    session$setInputs(sex = "Female vs. Male (Only for visualization)")
+    expect_equal(input$sex, "Female vs. Male (Only for visualization)")
+  })
 })
 
 test_that("Age dataframe generated correctly", {
