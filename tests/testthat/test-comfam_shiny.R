@@ -1,4 +1,5 @@
 test_that("comfam_shiny server logic works correctly", {
+  skip_if_not_installed("systemfonts")
   result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   server <- comfam_shiny(result)
   testServer(server, {

@@ -112,7 +112,7 @@ data_prep <- function(stage = "harmonization", result = NULL, features = NULL, b
       summary_df <- df %>% group_by(.data[[batch]]) %>% summarize(count = n(), percentage = 100 * n() / nrow(df))
       colnames(summary_df) <- c(batch, "count", "percentage (%)")
       summary_df <- summary_df %>% mutate(remove = case_when(.data[["count"]] < 3 ~ "removed",
-                                                            .default = "keeped"))
+                                                            .default = "kept"))
       batch_rm <- summary_df %>% filter(.data[["remove"]] == "removed") %>% pull(.data[[batch]]) %>% droplevels()
       if(length(batch_rm) > 0){
         message(paste0("Batch levels that contain less than 3 observations are dropped: ", length(batch_rm), " level(s) are dropped, corresponding to ", df %>% filter(.data[[batch]] %in% batch_rm) %>% nrow(), " observations."))

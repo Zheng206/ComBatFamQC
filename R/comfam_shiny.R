@@ -697,7 +697,7 @@ comfam_shiny <- function(result, after = FALSE){
       }else if(length(result$info$features) == 1){
         HTML(paste0("<strong>Note:</strong> The EB method is skipped for one feature dataset! Only the empirical distribution of the location and scale parameters will be displayed. <br>", "<br>"))
       }else{
-        HTML(paste0("<strong>Note:</strong> When the number of features is small, the empirical and prior distributions can look weird. <br>", "<br>"))
+        HTML(paste0("<strong>Note:</strong> When the number of features is small, the empirical and prior distributions may not visually align. <br>", "<br>"))
       }
     })
 
@@ -1091,7 +1091,7 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
 
   }else if(plot_name == "batch_summary"){
     ## batch level distribution plot
-    add_plot <- ggplot(info$summary_df %>% filter(remove == "keeped"), aes(x = .data[["count"]], y = .data[[batch]])) +
+    add_plot <- ggplot(info$summary_df %>% filter(remove == "kept"), aes(x = .data[["count"]], y = .data[[batch]])) +
       geom_bar(stat = "identity", fill = "aquamarine") +
       labs(x = "Count", y = "Batch") +
       theme(

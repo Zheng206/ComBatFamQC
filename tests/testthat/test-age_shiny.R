@@ -1,4 +1,5 @@
 test_that("Shiny app server initializes and processes inputs correctly", {
+  skip_if_not_installed("systemfonts")
   age_list <- readRDS(testthat::test_path("previous-results/age_list.rds"))
   server <- age_shiny(age_list = age_list, features = names(age_list), quantile_type = c("quantile_25", "median", "quantile_75"))
   testServer(server, {
