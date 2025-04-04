@@ -1,9 +1,14 @@
-## Resubmission of version 1.0.5
+## Resubmission of version 1.0.6
 
-## Change in version 1.0.5
-1. Revised unit tests for both com_shiny() and age_shiny() to use testthat and shiny, replacing shinytest2 for improved compatibility and maintainability.
+## Change in version 1.0.6
+1. Added the systemfonts package as a suggested dependency and implemented a skip mechanism for both com_shiny() and age_shiny() if the package is not installed. This should resolve the testing issue on r-oldrel-macos-arm64.
+
+2. Updated the wording in the Shiny app layout and fixed minor typos.
 
 ## Previous Submissions
+
+### Version 1.0.5
+1. Revised unit tests for both com_shiny() and age_shiny() to use testthat and shiny, replacing shinytest2 for improved compatibility and maintainability.
 
 ### Version 1.0.4
 1. Set the R dependency to require at least version 4.1.0.
