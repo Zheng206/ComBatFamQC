@@ -1133,7 +1133,7 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
     }
   }else if(plot_name == "resid_add"){
     ## additive residual plot
-    add_mean <- result$residual_add_df %>% group_by(result$residual_add_df[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
+    add_mean <- result$residual_add_df %>% group_by(.data[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
     colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
     result$residual_add_df <- result$residual_add_df %>% left_join(add_mean, by = c(batch))
     if(color == "No"){
@@ -1214,7 +1214,7 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
     }
   }else if(plot_name == "resid_mul"){
     ## multiplicative residual plot
-    add_mean <- result$residual_add_df %>% group_by(result$residual_add_df[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
+    add_mean <- result$residual_add_df %>% group_by(.data[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
     colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
     result$residual_ml_df <- result$residual_ml_df %>% left_join(add_mean, by = c(batch))
     if(color == "No"){

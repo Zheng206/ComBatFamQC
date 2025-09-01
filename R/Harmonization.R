@@ -22,6 +22,7 @@
 #' @param object Existing ComBat model.
 #' @param reference Dataset to be considered as the reference group.
 #' @param out_ref_include A boolean variable indicating whether the reference data should be included in the harmonized data output.
+#' @param quiet Logical; if TRUE, suppresses model messages and warnings.
 #' @param ... Additional arguments to `comfam` or `covfam` models.
 #'
 #' @return If the `eb_check` is set to be FALSE, then `combat_harm` returns a list containing the following components:
@@ -39,7 +40,7 @@
 #' covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni,100), type = "lm")
 #'
 
-combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch = NULL, covariates = NULL, df = NULL, type = "lm", random = NULL, smooth = NULL, interaction = NULL, smooth_int_type = NULL, family = "comfam", eb = TRUE, ref.batch = NULL, predict = FALSE, object = NULL, reference = NULL, out_ref_include = TRUE, ...){
+combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch = NULL, covariates = NULL, df = NULL, type = "lm", random = NULL, smooth = NULL, interaction = NULL, smooth_int_type = NULL, family = "comfam", eb = TRUE, ref.batch = NULL, predict = FALSE, object = NULL, reference = NULL, out_ref_include = TRUE, quiet = TRUE, ...){
   info <- data_prep(stage = "harmonization", result = result, features = features, batch = batch, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, predict = predict, object = object)
   df <- info$df
   batch <- info$batch
@@ -49,6 +50,7 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
   smooth <- info$smooth
   cov_shiny <- info$cov_shiny
   char_var <- info$char_var
+  type <- info$type
 
   # Empirical Estimates
   if (is.null(covariates)){
@@ -74,28 +76,54 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
         message("Starting first-time harmonization...")
         form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
         if(family == "comfam"){
-          ComBat_run <- comfam(data = df[features],
-                               bat = df[[batch]],
-                               covar = combat_c,
-                               model = eval(parse(text = type)),
-                               formula = as.formula(form),
-                               ref.batch = ref.batch,
-                               eb = eb,
-                               ...)
+          if(quiet){
+            ComBat_run <- suppressMessages(suppressWarnings(comfam(data = df[features],
+                                 bat = df[[batch]],
+                                 covar = combat_c,
+                                 model = eval(parse(text = type)),
+                                 formula = as.formula(form),
+                                 ref.batch = ref.batch,
+                                 eb = eb,
+                                 ...)))
+
+          }else{
+            ComBat_run <- comfam(data = df[features],
+                                 bat = df[[batch]],
+                                 covar = combat_c,
+                                 model = eval(parse(text = type)),
+                                 formula = as.formula(form),
+                                 ref.batch = ref.batch,
+                                 eb = eb,
+                                 ...)
+          }
         }else{
-          ComBat_run <- covfam(data = df[features],
-                               bat = df[[batch]] ,
-                               covar = combat_c,
-                               model = eval(parse(text = type)),
-                               formula = as.formula(form),
-                               ref.batch = ref.batch,
-                               eb = eb,
-                               ...)
+          if(quiet){
+            ComBat_run <- suppressMessages(suppressWarnings(covfam(data = df[features],
+                                 bat = df[[batch]] ,
+                                 covar = combat_c,
+                                 model = eval(parse(text = type)),
+                                 formula = as.formula(form),
+                                 ref.batch = ref.batch,
+                                 eb = eb,
+                                 ...)))
+          }else{
+            ComBat_run <- covfam(data = df[features],
+                                 bat = df[[batch]] ,
+                                 covar = combat_c,
+                                 model = eval(parse(text = type)),
+                                 formula = as.formula(form),
+                                 ref.batch = ref.batch,
+                                 eb = eb,
+                                 ...)
+            }
         }
       }else{
         message("Starting out-of-sample harmonization using the saved ComBat Model...")
         ComBat_run <- predict(object = object$ComBat.model, newdata = df[features], newbat = df[[batch]], newcovar = combat_c, eb = object$eb, ...)
-      }
+        if("pc.output" %in% names(object$ComBat.model)){
+          family <- "covfam"
+        }else{family <- "comfam"}
+        }
     }else{
       message("Starting out-of-sample harmonization using the reference dataset...")
       reference[[batch]] <- as.factor(reference[[batch]])
@@ -107,17 +135,17 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
       }
       ## check if reference data is included in the new data
       other_info <- setdiff(colnames(reference), features)
-      n_ref <- df %>% semi_join(reference[other_info]) %>% nrow()
+      suppressMessages(n_ref <- df %>% semi_join(reference[other_info]) %>% nrow())
       if(n_ref == nrow(reference)){
         message("The reference data is included in the new unharmonized dataset")
         untouched <- reference
-        untouched_included <- reference %>% semi_join(df[other_info])
-        new_data <- df %>% anti_join(reference[other_info])
+        suppressMessages(untouched_included <- reference %>% semi_join(df[other_info]))
+        suppressMessages(new_data <- df %>% anti_join(reference[other_info]))
       }else if(n_ref < nrow(reference) & n_ref > 0){
         message("The reference data is partially included in the new unharmonized dataset")
         untouched <- reference
-        untouched_included <- reference %>% semi_join(df[other_info])
-        new_data <- df %>% anti_join(reference[other_info])
+        suppressMessages(untouched_included <- reference %>% semi_join(df[other_info]))
+        suppressMessages(new_data <- df %>% anti_join(reference[other_info]))
       }else if(n_ref == 0){
         message("The reference data is separated from the new unharmonized dataset")
         untouched <- reference
@@ -142,23 +170,46 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
       }
       form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
       if(family == "comfam"){
-        ComBat_run <- comfam(data = df_c[features],
-                             bat = df_c[[batch]],
-                             covar = combat_c,
-                             model = eval(parse(text = type)),
-                             formula = as.formula(form),
-                             ref.batch = "reference",
-                             eb = eb,
-                             ...)
+        if(quiet){
+          ComBat_run <- suppressMessages(suppressWarnings(comfam(data = df_c[features],
+                               bat = df_c[[batch]],
+                               covar = combat_c,
+                               model = eval(parse(text = type)),
+                               formula = as.formula(form),
+                               ref.batch = "reference",
+                               eb = eb,
+                               ...)))
+        }else{
+          ComBat_run <- comfam(data = df_c[features],
+                               bat = df_c[[batch]],
+                               covar = combat_c,
+                               model = eval(parse(text = type)),
+                               formula = as.formula(form),
+                               ref.batch = "reference",
+                               eb = eb,
+                               ...)
+        }
       }else{
-        ComBat_run <- covfam(data = df_c[features],
-                             bat = df_c[[batch]] ,
-                             covar = combat_c,
-                             model = eval(parse(text = type)),
-                             formula = as.formula(form),
-                             ref.batch = "reference",
-                             eb = eb,
-                             ...)
+        if(quiet){
+          ComBat_run <- suppressMessages(suppressWarnings(covfam(data = df_c[features],
+                               bat = df_c[[batch]] ,
+                               covar = combat_c,
+                               model = eval(parse(text = type)),
+                               formula = as.formula(form),
+                               ref.batch = "reference",
+                               eb = eb,
+                               ...)))
+        }else{
+          ComBat_run <- covfam(data = df_c[features],
+                               bat = df_c[[batch]] ,
+                               covar = combat_c,
+                               model = eval(parse(text = type)),
+                               formula = as.formula(form),
+                               ref.batch = "reference",
+                               eb = eb,
+                               ...)
+        }
+
       }
     }
 
@@ -480,7 +531,7 @@ comfam <- function(data, bat, covar = NULL, model = lm, formula = NULL,
   out
 }
 
-#' Apply Harmonization to New Data
+#' Apply ComBat Family Harmonization to New Data
 #'
 #' Using parameters estimated via `comfam`, apply harmonization on new data.
 #' `predict.comfam` will estimate new batch adjustments if new batches are
@@ -734,7 +785,10 @@ predict.comfam <- function(object, newdata, newbat, newcovar = NULL,
 #' \item{combat.out}{List output of `comfam` from the ComBat step}
 #' \item{pc.output}{Output of `prcomp` from PCA step}
 #' \item{n.pc}{Numeric, number of PCs harmonized}
+#' \item{std.var}{Wether to scale variances before PCA}
 #' \item{scores.com}{List output of `comfam` from the CovBat step}
+#' \item{fits}{List of model fits from regression step, forwarded from `object`}
+#' \item{estimates}{List of estimates from standardization and batch effect correction, including new batches if relevant}
 #'
 #' @export
 #'
@@ -799,9 +853,116 @@ covfam <- function(data, bat, covar = NULL, model = lm, formula = NULL,
 
   out <- list(dat.covbat = data_covbat, batch.info = batch_info,
               combat.out = com_out, pc.output = d_pc, n.pc = npc,
-              scores.combat = scores_com)
+              std.var = std.var, scores.combat = scores_com, fits = com_out$fits, estimates = com_out$estimates)
   class(out) <- c("covfam")
   out
+}
+
+
+
+#' Apply CovBat Harmonization to New Data
+#'
+#' Using parameters estimated via `covfam`, apply harmonization on new data.
+#' `predict.covfam` will estimate new batch adjustments if new batches are
+#' specified. For batches with existing estimates, the estimates from `object`
+#' are used. Harmonization targets are the same as `object` (e.g. `ref.batch`
+#' from `object` if specified). Model specifications are defined by the
+#' original `covfam` fit.
+#'
+#' @param object Object of class `covfam`.
+#' @param newdata \emph{n x p} data frame or matrix of new observations where
+#'   \emph{p} is the number of features and \emph{n} is the number of subjects.
+#'   The features must match the original `data` used in `object`
+#' @param newbat Factor indicating new batch (often equivalent to site or scanner)
+#' @param newcovar Data frame or matrix of new covariates supplied to `model`.
+#'   Must contain all variables specified in the original `formula` used in
+#'   `object`.
+#' @param eb If \code{TRUE}, uses CovBat model with empirical Bayes for new batches
+#' @param robust.LS If \code{TRUE}, uses robust location and scale estimators
+#'   for new batch effect estimates. Currently uses median and biweight
+#'   midvariance
+#' @param score.args List of arguments to `predict` for the class of `score.model`
+#' @param ... Additional arguments to `predict` for the class of `model` (e.g.
+#'   `predict.lm` for CovBat)
+#'
+#' @return `predict.covfam` returns a list containing the following components:
+#' \item{batch.info}{Batch information, including reference batch if specified}
+#' \item{combat.out}{List output from the ComBat step}
+#' \item{pc.output}{Output of `prcomp` from PCA step}
+#' \item{n.pc}{Numeric, number of PCs harmonized}
+#' \item{scores.com}{List output from the CovBat step}
+#'
+#' @export
+#'
+#' @examples
+#' cov_out <- covfam(iris[1:75,1:4], iris$Species[1:75])
+#'
+#' # out-of-sample with new batch
+#' out_pred <- predict(cov_out, iris[76:150,1:4], iris$Species[76:150])
+#'
+#' # in-sample
+#' in_pred <- predict(cov_out, iris[1:25,1:4], iris$Species[1:25])
+#' max(in_pred$dat.covbat - cov_out$dat.covbat[1:25,1:4])
+predict.covfam <- function(object, newdata, newbat, newcovar = NULL,
+                           robust.LS = FALSE, eb = TRUE, score.args = NULL,
+                           ...) {
+  n <- nrow(newdata)
+  p <- ncol(newdata)
+
+  if ((p == 1) & eb) {
+    warning("EB step skipped for univariate data.")
+    eb <- FALSE
+  }
+
+  # Specify robust location/scale estimators
+  if (robust.LS) {
+    loc <- median
+    scl <- .biweight_midvar
+  } else {
+    loc <- mean
+    scl <- var
+  }
+
+  com_out <- predict(object$combat.out, newdata, newbat, newcovar, robust.LS, eb)
+  com_res <- com_out$dat.combat - com_out$estimates$stand.mean
+
+  #### Adjust for multivariate batch effects via PCA ####
+  d_pc <- object$pc.output
+
+  # Adjust PCs specified in original fit
+  npc <- object$n.pc
+  full_scores <- predict(d_pc, com_res)
+
+  # ComBat without covariates to remove site effect in score mean/variance
+  # If score.model specified, fits that model instead
+  if (is.null(object$score.model)) {
+    scores_com <- predict(object$scores.combat, full_scores[,1:npc], newbat,
+                          eb = FALSE)
+  } else {
+    scores_com <- do.call(predict,
+                          c(list(object$scores.combat, full_scores[,1:npc],
+                                 newbat, newcovar, eb = FALSE), score.args))
+  }
+  full_scores[,1:npc] <- scores_com$dat.combat
+
+  #### Project scores back into observation space ####
+  if (object$std.var) {
+    data_covbat <- full_scores %*% t(d_pc$rotation) *
+      matrix(d_pc$scale, n, p, byrow = TRUE) +
+      matrix(d_pc$center, n, p, byrow = TRUE)
+  } else {
+    data_covbat <- full_scores %*% t(d_pc$rotation) +
+      matrix(d_pc$center, n, p, byrow = TRUE)
+  }
+
+  # Reintroduce covariate effects
+  data_covbat <- data_covbat + com_out$estimates$stand.mean
+
+  out <- object
+  out$dat.covbat <- data_covbat
+  out$combat.out <- com_out
+  out$scores.combat <- scores_com
+  return(out)
 }
 
 
