@@ -63,6 +63,16 @@ The ComBatFamQC package offers the following five key functionalities:
 
 ## Installation
 
+### CRAN 
+
+```{r}
+install.packages("ComBatFamQC")
+```
+
+### GitHub
+
+The GitHub build is one release ahead of CRAN and includes out-of-sample harmonization for CovBat.
+
 ```{r}
 if (!require("devtools", quietly = TRUE)) {
     install.packages("devtools")   
@@ -71,7 +81,6 @@ if (!require("devtools", quietly = TRUE)) {
 library(devtools)
 
 devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
-
 ```
 
 ## Tutorial
@@ -79,6 +88,17 @@ devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
 ```{r}
 vignette("ComBatQC")
 vignette("Post-Harmonization")
+```
+
+## Command-line Interface
+
+```{bash}
+RSCRIPT=${RSCRIPT:-$(command -v Rscript)}
+combatqc_cli="$($RSCRIPT -e 'cat(system.file("combatQC_CLI.R", package="ComBatFamQC"))')"
+post_cli="$($RSCRIPT -e 'cat(system.file("post_CLI.R", package="ComBatFamQC"))')"
+
+Rscript $combatqc_cli -h
+Rscript $post_cli -h
 ```
 
 
