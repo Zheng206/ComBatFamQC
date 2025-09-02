@@ -673,6 +673,26 @@ diag_save <- function(path, result, use_quarto = TRUE){
     setwd(path)
     on.exit(setwd(original_dir), add = TRUE)
 
+    result_names <- names(result)
+    table_names <- result_names[grepl("residual_|pca|tsne", result_names)]
+    test_names <- result_names[grepl("_test_|mdmr", result_names)]
+
+    result <- lapply(result_names, function(name){
+      if(name %in% test_names){
+        n <- nrow(result[[name]])
+        if(n != 0){
+          test_table <- result[[name]] %>% mutate(sig = ifelse(is.na(.data[["sig"]]), "", .data[["sig"]]))
+        }else{test_table <- result[[name]]}
+        return(test_table)
+      }else if(name %in% table_names){
+        table <- result[[name]][, colSums(is.na(result[[name]])) == 0]
+        return(table)
+      }else{
+        return(result[[name]])
+      }
+    })
+    names(result) <- result_names
+
     quarto::quarto_render(
       input = "diagnosis_report.qmd",
       output_file = "diagnosis_report.html",

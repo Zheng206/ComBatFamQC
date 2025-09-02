@@ -102,7 +102,7 @@ if (!is.null(params$data$tsne_df)) {
 
 ```{r}
 if (!is.null(params$data$mdmr.summary)) {
-  mdmr <- as_tibble(params$data$mdmr.summary) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+  mdmr <- as_tibble(params$data$mdmr.summary) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .)) %>% mutate(sig = ifelse(is.na(sig), "", sig))
   mdmr %>% DT::datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"), color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle('sig', target = 'row', backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
 } else {
   cat("No data available for MDMR Results.")
@@ -134,7 +134,7 @@ This section provides several statistical tests illustrating whether individual 
 ### ANOVA
 
 ```{r}
-anova_test_df <- as_tibble(params$data$anova_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+anova_test_df <- as_tibble(params$data$anova_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .)) %>% mutate(sig = ifelse(is.na(sig), "", sig))
 n <- nrow(anova_test_df)
 if (n != 0) {
   anova_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
@@ -148,7 +148,7 @@ if (n != 0) {
 
 ```{r}
 if (!is.null(params$data$anova_test_df)) {
-  pct <- 100 * (n - sum(anova_test_df$sig == ".na.character"))/n
+  pct <- 100 * (n - sum(anova_test_df$sig == ""))/n
   cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
 }
 ```
@@ -156,7 +156,7 @@ if (!is.null(params$data$anova_test_df)) {
 ### Kruskal-Wallis
 
 ```{r}
-kw_test_df <- as_tibble(params$data$kw_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+kw_test_df <- as_tibble(params$data$kw_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .)) %>% mutate(sig = ifelse(is.na(sig), "", sig))
 n <- nrow(kw_test_df)
 if (n != 0 ) {
   kw_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
@@ -170,7 +170,7 @@ if (n != 0 ) {
 
 ```{r}
 if (!is.null(params$data$kw_test_df)) {
-  pct <- 100 * (n - sum(kw_test_df$sig == ".na.character"))/n
+  pct <- 100 * (n - sum(kw_test_df$sig == ""))/n
   cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
 }
 ```
@@ -181,7 +181,7 @@ if (!is.null(params$data$kw_test_df)) {
 kr_test_df <- as_tibble(params$data$kr_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
 n <- nrow(kr_test_df)
 if (n != 0) {
-  kr_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
+  kr_test_df %>% mutate(sig = ifelse(is.na(sig), "", sig)) %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
           'sig',
           target = 'row',
           backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
@@ -192,7 +192,7 @@ if (n != 0) {
 
 ```{r}
 if (n != 0) {
-  pct <- 100 * (n - sum(kr_test_df$sig == ".na.character"))/n
+  pct <- 100 * (n - sum(kr_test_df$sig == ""))/n
   cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
 }
 ```
@@ -204,7 +204,7 @@ if (n != 0) {
 ### Levene's Test
 
 ```{r}
-lv_test_df <- as_tibble(params$data$lv_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+lv_test_df <- as_tibble(params$data$lv_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .)) %>% mutate(sig = ifelse(is.na(sig), "", sig))
 n <- nrow(lv_test_df)
 if (n != 0) {
   lv_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
@@ -218,7 +218,7 @@ if (n != 0) {
 
 ```{r}
 if (!is.null(params$data$lv_test_df)) {
-  pct <- 100 * (n - sum(lv_test_df$sig == ".na.character"))/n
+  pct <- 100 * (n - sum(lv_test_df$sig == ""))/n
   cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
 }
 ```
@@ -226,7 +226,7 @@ if (!is.null(params$data$lv_test_df)) {
 ### Bartlett's Test
 
 ```{r}
-bl_test_df <- as_tibble(params$data$bl_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+bl_test_df <- as_tibble(params$data$bl_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .)) %>% mutate(sig = ifelse(is.na(sig), "", sig))
 n <- nrow(bl_test_df)
 if (n != 0 ) {
   bl_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
@@ -240,7 +240,7 @@ if (n != 0 ) {
 
 ```{r}
 if (!is.null(params$data$bl_test_df)) {
-  pct <- 100 * (n - sum(bl_test_df$sig == ".na.character"))/n
+  pct <- 100 * (n - sum(bl_test_df$sig == ""))/n
   cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
 }
 ```
@@ -248,7 +248,7 @@ if (!is.null(params$data$bl_test_df)) {
 ### Fligner-Killeen
 
 ```{r}
-fk_test_df <- as_tibble(params$data$fk_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .))
+fk_test_df <- as_tibble(params$data$fk_test_df) %>% mutate(across(everything(), ~ if (is.list(.)) unlist(.) else .)) %>% mutate(sig = ifelse(is.na(sig), "", sig))
 n <- nrow(fk_test_df)
 if (n != 0) {
   fk_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(unlist(params$data$red), "red")) %>% formatStyle(
@@ -262,7 +262,7 @@ if (n != 0) {
 
 ```{r}
 if (!is.null(params$data$fk_test_df)) {
-  pct <- 100 * (n - sum(fk_test_df$sig == ".na.character"))/n
+  pct <- 100 * (n - sum(fk_test_df$sig == ""))/n
   cat(paste0("The percentage of significant features is: ", round(pct, 2), "."))
 }
 ```

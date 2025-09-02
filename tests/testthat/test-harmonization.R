@@ -37,6 +37,10 @@ test_that("Harmonization functions work correctly", {
   predict_model <- combat_harm(df = adni %>% head(1000), predict = TRUE, object = saved_model)
   expect_type(predict_model, "list")
 
+  saved_model_cov <- covbat_model$combat.object
+  predict_model_cov <- combat_harm(df = adni %>% head(1000), predict = TRUE, object = saved_model_cov)
+  expect_type(predict_model_cov, "list")
+
   ### Reference Model
   #### harmonize reference data
   reference_site <- adni %>% group_by(site) %>% summarize(count = n()) %>% arrange(desc(count)) %>% pull(site) %>% head(30)

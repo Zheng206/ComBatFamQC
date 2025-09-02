@@ -2,7 +2,7 @@
 % Please edit documentation in R/Harmonization.R
 \name{predict.comfam}
 \alias{predict.comfam}
-\title{Apply Harmonization to New Data}
+\title{Apply ComBat Family Harmonization to New Data}
 \usage{
 \method{predict}{comfam}(
   object,

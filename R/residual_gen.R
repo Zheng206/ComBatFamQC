@@ -62,7 +62,7 @@ residual_gen <- function(type = "lm", features = NULL, covariates = NULL, intera
     other_col <- setdiff(colnames(df), used_col)
     other_info <- df[other_col]
   }
-
+  suppressMessages(
   if(!is.null(rm)){
     if(type!="lmer"){
       residuals <- mclapply(1:length(features), function(i){
@@ -95,7 +95,7 @@ residual_gen <- function(type = "lm", features = NULL, covariates = NULL, intera
     colnames(residuals) <- features
     residuals <- cbind(other_info, residuals)
     residuals <- residuals[colnames(df)]
-  }else{residuals <- df}
+  }else{residuals <- df})
   result <- list("model" = models, "residual"= residuals)
   return(result)
 }

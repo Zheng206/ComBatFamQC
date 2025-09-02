@@ -69,7 +69,10 @@ component scores is harmonized. Overrides \code{percent.var}}
 \item{combat.out}{List output of \code{comfam} from the ComBat step}
 \item{pc.output}{Output of \code{prcomp} from PCA step}
 \item{n.pc}{Numeric, number of PCs harmonized}
+\item{std.var}{Wether to scale variances before PCA}
 \item{scores.com}{List output of \code{comfam} from the CovBat step}
+\item{fits}{List of model fits from regression step, forwarded from \code{object}}
+\item{estimates}{List of estimates from standardization and batch effect correction, including new batches if relevant}
 }
 \description{
 Implementation of the CovBat Family of harmonization methods allowing for
