@@ -693,6 +693,8 @@ diag_save <- function(path, result, use_quarto = TRUE){
     })
     names(result) <- result_names
 
+    result$info$df <- result$info$df[, colSums(is.na(result$info$df)) == 0]
+
     quarto::quarto_render(
       input = "diagnosis_report.qmd",
       output_file = "diagnosis_report.html",
