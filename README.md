@@ -33,11 +33,12 @@ The ComBatFamQC package offers the following five key functionalities:
 
 -   **Batch Effect Diagnostics**: ComBatFamQC provides two types of batch effect diagnostics methods for both individual batch effects and global batch effects: 1) *Qualitative Visualization* and 2) *Statistical Testing*. It simplifies the process of performing statistical analyses to detect potential batch effects and provides all relevant statistical test results for batch effect visualization and evaluation.
 
--   **Harmonization**: ComBatFamQC also provides four types of commonly used harmonization techniques, integrated through the [ComBatFamily](https://github.com/andy1764/ComBatFamily) package developed by **Dr. Andrew Chen**, for users to consider. The four harmonization techniques include: 
+-   **Harmonization**: ComBatFamQC provides built-in harmonization methods based on [ComBatFamily](https://github.com/andy1764/ComBatFamily), developed by **Dr. Andrew Chen**, and an optional external ComBatLS backend. The available methods include:
     -   Original ComBat (Johnson et al., 2007)
     -   Longitudinal ComBat (Beer et al., 2020)
     -   ComBat-GAM (Pomponio et al., 2020)
     -   CovBat (Chen et al., 2021)
+    -   ComBatLS (Gardner et al., 2025; optional ComBatFamily dependency)
 
 -   **Interactive Visualization through R Shiny**: The ComBatFamQC package comes with an interactive visualization tool built on R Shiny, providing an intuitive user interface to explore and evaluate batch effects, as well as conduct interactive harmonization if needed. The output is organized into multiple tabs, which includes:
 
@@ -82,6 +83,101 @@ library(devtools)
 
 devtools::install_github("Zheng206/ComBatFamQC", build_vignettes = TRUE)
 ```
+
+### Optional ComBatLS and dependency checks
+
+ComBatLS uses the external [ComBatFamily](https://github.com/andy1764/ComBatFamily)
+package (>= 0.2.2), installed only when needed. Existing ComBat and CovBat
+methods work without it.
+
+```r
+library(ComBatFamQC)
+check_dependencies()                 # Report missing packages and version problems
+check_dependencies(install = TRUE)   # Install or update packages that need attention
+check_dependencies(include_suggests = TRUE)  # Also check all optional packages
+```
+
+The helper checks declared version requirements and whether packages can load,
+including dependencies of installed packages. It uses CRAN for ordinary packages
+and GitHub for ComBatFamily, and rechecks after installation. Restart R if the
+report shows `restart_required` after updating a loaded package.
+
+Use explicit GAMLSS formulas with the existing dataset arguments and result structure:
+
+```r
+harm_ls <- combat_harm(
+  df = adni, features = colnames(adni)[43:46], batch = "manufac",
+  covariates = c("AGE", "SEX", "DIAGNOSIS"), family = "combatls",
+  formula = y ~ AGE + SEX + DIAGNOSIS
+)
+harm_ls$harmonized_df
+```
+
+ComBatLS requires an explicit location `formula` and defaults to constant
+biological scale (`sigma.formula = ~ 1`). Specify `sigma.formula` explicitly
+to preserve biological scale effects:
+
+| Intention | `formula` | `sigma.formula` |
+| --- | --- | --- |
+| Linear effects | `y ~ AGE_z + SEX` | `~ 1` |
+| Preserve biological scale effects | `y ~ AGE_z + SEX` | `~ AGE_z + SEX` |
+| Nonlinear biological effects | `y ~ pb(AGE_z) + SEX` | `~ pb(AGE_z) + SEX` |
+
+```r
+nonlinear_ls <- combat_harm(
+  df = adni, features = colnames(adni)[43:46], batch = "manufac",
+  covariates = c("AGE", "SEX"), family = "combatls",
+  formula = y ~ pb(AGE) + SEX,
+  sigma.formula = ~ pb(AGE) + SEX
+)
+```
+
+Include every variable used by either formula in `covariates`; use `y` as the
+mean response. GAMLSS helpers such as `pb()` resolve without attaching GAMLSS,
+and custom functions in the formula's environment are preserved. Keep
+`type = "lm"` for this API; ComBatLS always fits GAMLSS models. There is no
+smoother conversion or automatic inheritance from the mean to the scale formula.
+The legacy `smooth`, `interaction`, `random`, and `smooth_int_type` arguments
+and mgcv smoothers such as `s()` are rejected for ComBatLS. Specify interactions
+directly in the formulas, for example `y ~ AGE * SEX`. Use `formula = y ~ 1`
+for an intercept-only location model. Other families retain automatic formula
+generation for ComBat, ComBat-GAM, longitudinal ComBat, and CovBat.
+`ref.batch` and reference-data harmonization use the existing arguments.
+Mixed effects, saved-model prediction, and the EB assumption diagnostic are
+currently unavailable for ComBatLS.
+Extra fitting options, such as `control = gamlss::gamlss.control(trace = FALSE)`,
+pass through to ComBatFamily. The CLI accepts `--family combatls` as well.
+
+### ComBatLS from the command line
+
+The CLI requires `argparser`, `readr`, `readxl`, and `stringr`, plus the optional
+ComBatFamily backend for ComBatLS. Formula strings use column **names**, while
+`--batch`, `--features`, and `--covariates` use column **positions**. Include all
+variables from both formulas in `--covariates`. The CLI reports any missing
+formula variables before reference loading or fitting. This check does not
+validate function availability; GAMLSS resolves functions separately.
+
+For a CSV with batch in column 1, `AGE_z` and `SEX` in columns 2–3, and features
+in columns 4–8:
+
+```bash
+combatqc_cli="$(Rscript -e 'cat(system.file("combatQC_CLI.R", package="ComBatFamQC"))')"
+Rscript "$combatqc_cli" data.csv \
+  --diagnosis FALSE --family combatls \
+  --batch 1 --features 4-8 --covariates 2-3 \
+  --formula 'y ~ pb(AGE_z) + SEX' \
+  --sigma.formula '~ pb(AGE_z) + SEX' \
+  --eb TRUE --outdir harmonized.csv --mout combatls.rds
+```
+
+`--formula` is required for ComBatLS, including for linear effects or an
+intercept-only model (`y ~ 1`). Omitting `--sigma.formula` uses constant scale
+(`~ 1`). The legacy `--smooth`, `--interaction`, and `--random` options are not
+supported for ComBatLS; put GAMLSS effects and interactions in the formulas.
+The formula options apply to ComBatLS harmonization. `--family combatls` selects
+GAMLSS automatically; `--model` is ignored as a fitting-engine selector for this
+family. Specify nonlinear effects directly in the formulas. The API reports installation instructions if
+ComBatFamily is missing or too old. The CLI does not install packages automatically.
 
 ## Tutorial
 

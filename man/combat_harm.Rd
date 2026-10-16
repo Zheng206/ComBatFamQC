@@ -24,6 +24,9 @@ combat_harm(
   reference = NULL,
   out_ref_include = TRUE,
   quiet = TRUE,
+  sigma.formula = ~1,
+  formula = NULL,
+  robust.LS = FALSE,
   ...
 )
 }
@@ -52,9 +55,15 @@ combat_harm(
 \code{"categorical-continuous"}, \code{"factor-smooth"} both represent categorical-continuous interactions (\code{"factor-smooth"} includes categorical variable as part of the smooth),
 \code{"tensor"} represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.}
 
-\item{family}{The type of combat family to use, \code{comfam} or \code{covfam}.}
+\item{family}{Harmonization family: \code{comfam}, \code{covfam}, or \code{combatls}.
+ComBatLS requires optional ComBatFamily (>= 0.2.2) and uses GAMLSS.
+Keep \code{type = "lm"}; use \code{formula} for nonlinear GAMLSS effects.
+Saved-model prediction and \code{eb_check} are not supported for ComBatLS.}
 
-\item{eb}{If \code{TRUE}, uses ComBat model with empirical Bayes for mean and variance harmonization}
+\item{eb}{If \code{TRUE}, uses empirical Bayes for mean and variance
+harmonization. Automatically disabled when one feature remains after data
+preparation; \code{combat.object$eb} records the effective setting. Saved-model
+prediction inherits this setting from \code{object}.}
 
 \item{ref.batch}{The name of the reference batch.}
 
@@ -68,17 +77,36 @@ combat_harm(
 
 \item{quiet}{Logical; if TRUE, suppresses model messages and warnings.}
 
-\item{...}{Additional arguments to \code{comfam} or \code{covfam} models.}
+\item{sigma.formula}{One-sided scale formula for ComBatLS. Defaults to \code{~ 1}
+(constant biological scale). Specify, for example, \code{~ AGE + SEX} or
+\code{~ pb(AGE) + SEX} to preserve biological scale effects. All variables must
+be listed in \code{covariates}. No mean-formula inheritance is performed.
+Only available with \code{family = "combatls"}, as is \code{formula}.}
+
+\item{formula}{Required two-sided location formula for ComBatLS, with response
+\code{y}, for example \code{y ~ pb(AGE) + SEX} or \code{y ~ 1}. All variables other than \code{y}
+must be listed in \code{covariates}. GAMLSS functions such as \code{pb()} can be used
+without attaching GAMLSS. Formula environments and custom functions are
+preserved. ComBatLS does not support \code{smooth}, \code{interaction}, \code{random}, or
+\code{smooth_int_type}; specify supported GAMLSS effects in the formulas. Other
+families continue to generate formulas automatically from their arguments.}
+
+\item{robust.LS}{Logical; use robust location and scale estimators for batch
+adjustment. Passed explicitly to the selected ComBat/CovBat backend,
+including ComBatFamily for ComBatLS.}
+
+\item{...}{Additional arguments to \code{comfam}, \code{covfam}, or external
+\code{ComBatFamily::combatls} models.}
 }
 \value{
 If the \code{eb_check} is set to be FALSE, then \code{combat_harm} returns a list containing the following components:
-\item{com_family}{ComBat family to be considered: comfam, covfam}
+\item{com_family}{ComBat family used: comfam, covfam, or combatls}
 \item{harmonized_df}{Harmonized dataset}
 \item{combat.object}{Saved ComBat model and relevant information, such as the batch variable name and whether the EB method is used}
 If \code{eb_check}  is set to be TRUE, then \code{combat_harm} will return a dataframe with the EB assumption test result.
 }
 \description{
-Conduct harmonization using four types of methods: 1) Original ComBat, 2) Longitudinal ComBat, 3) ComBat-GAM, and 4) CovBat.
+Conduct harmonization using original ComBat, longitudinal ComBat, ComBat-GAM, CovBat, or optional ComBatLS from ComBatFamily.
 }
 \examples{
 combat_harm(features = colnames(adni)[43:53], batch = "manufac",

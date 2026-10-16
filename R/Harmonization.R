@@ -1,6 +1,6 @@
 #' ComBatFamily Harmonization
 #'
-#' Conduct harmonization using four types of methods: 1) Original ComBat, 2) Longitudinal ComBat, 3) ComBat-GAM, and 4) CovBat.
+#' Conduct harmonization using original ComBat, longitudinal ComBat, ComBat-GAM, CovBat, or optional ComBatLS from ComBatFamily.
 #'
 #' @param eb_check A boolean variable indicating whether the user wants to run the EB assumption test before harmonization.
 #' @param result A list derived from `visual_prep()` that contains dataset and batch effect diagnostic information for Shiny visualization. Can be skipped if `features`, `batch`, `covariates` and `df` are provided.
@@ -15,18 +15,40 @@
 #' @param smooth_int_type A vector that indicates the types of interaction in `gam` models. By default, `smooth_int_type` is set to be NULL, `"linear"` represents linear interaction terms.
 #' `"categorical-continuous"`, `"factor-smooth"` both represent categorical-continuous interactions (`"factor-smooth"` includes categorical variable as part of the smooth),
 #' `"tensor"` represents interactions with different scales, and "smooth-smooth" represents interaction between smoothed variables.
-#' @param family The type of combat family to use, `comfam` or `covfam`.
-#' @param eb If \code{TRUE}, uses ComBat model with empirical Bayes for mean and variance harmonization
+#' @param family Harmonization family: `comfam`, `covfam`, or `combatls`.
+#'   ComBatLS requires optional ComBatFamily (>= 0.2.2) and uses GAMLSS.
+#'   Keep `type = "lm"`; use `formula` for nonlinear GAMLSS effects.
+#'   Saved-model prediction and `eb_check` are not supported for ComBatLS.
+#' @param formula Required two-sided location formula for ComBatLS, with response
+#'   `y`, for example `y ~ pb(AGE) + SEX` or `y ~ 1`. All variables other than `y`
+#'   must be listed in `covariates`. GAMLSS functions such as `pb()` can be used
+#'   without attaching GAMLSS. Formula environments and custom functions are
+#'   preserved. ComBatLS does not support `smooth`, `interaction`, `random`, or
+#'   `smooth_int_type`; specify supported GAMLSS effects in the formulas. Other
+#'   families continue to generate formulas automatically from their arguments.
+#' @param sigma.formula One-sided scale formula for ComBatLS. Defaults to `~ 1`
+#'   (constant biological scale). Specify, for example, `~ AGE + SEX` or
+#'   `~ pb(AGE) + SEX` to preserve biological scale effects. All variables must
+#'   be listed in `covariates`. No mean-formula inheritance is performed.
+#'   Only available with `family = "combatls"`, as is `formula`.
+#' @param robust.LS Logical; use robust location and scale estimators for batch
+#'   adjustment. Passed explicitly to the selected ComBat/CovBat backend,
+#'   including ComBatFamily for ComBatLS.
+#' @param eb If \code{TRUE}, uses empirical Bayes for mean and variance
+#'   harmonization. Automatically disabled when one feature remains after data
+#'   preparation; `combat.object$eb` records the effective setting. Saved-model
+#'   prediction inherits this setting from `object`.
 #' @param ref.batch The name of the reference batch.
 #' @param predict A boolean variable indicating whether to run ComBat from scratch or apply existing model to new dataset (currently only work for original ComBat and ComBat-GAM).
 #' @param object Existing ComBat model.
 #' @param reference Dataset to be considered as the reference group.
 #' @param out_ref_include A boolean variable indicating whether the reference data should be included in the harmonized data output.
 #' @param quiet Logical; if TRUE, suppresses model messages and warnings.
-#' @param ... Additional arguments to `comfam` or `covfam` models.
+#' @param ... Additional arguments to `comfam`, `covfam`, or external
+#'   `ComBatFamily::combatls` models.
 #'
 #' @return If the `eb_check` is set to be FALSE, then `combat_harm` returns a list containing the following components:
-#' \item{com_family}{ComBat family to be considered: comfam, covfam}
+#' \item{com_family}{ComBat family used: comfam, covfam, or combatls}
 #' \item{harmonized_df}{Harmonized dataset}
 #' \item{combat.object}{Saved ComBat model and relevant information, such as the batch variable name and whether the EB method is used}
 #' If `eb_check`  is set to be TRUE, then `combat_harm` will return a dataframe with the EB assumption test result.
@@ -40,7 +62,30 @@
 #' covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni,100), type = "lm")
 #'
 
-combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch = NULL, covariates = NULL, df = NULL, type = "lm", random = NULL, smooth = NULL, interaction = NULL, smooth_int_type = NULL, family = "comfam", eb = TRUE, ref.batch = NULL, predict = FALSE, object = NULL, reference = NULL, out_ref_include = TRUE, quiet = TRUE, ...){
+combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch = NULL, covariates = NULL, df = NULL, type = "lm", random = NULL, smooth = NULL, interaction = NULL, smooth_int_type = NULL, family = "comfam", eb = TRUE, ref.batch = NULL, predict = FALSE, object = NULL, reference = NULL, out_ref_include = TRUE, quiet = TRUE, sigma.formula = ~ 1, formula = NULL, robust.LS = FALSE, ...){
+  location_formula <- formula
+  family <- match.arg(family, c("comfam", "covfam", "combatls"))
+  if (predict && identical(object$family, "combatls")) family <- "combatls"
+  if (family == "combatls") {
+    if (predict) stop("Saved-model prediction is not supported for ComBatLS; use reference data instead.", call. = FALSE)
+    if (eb_check) stop("eb_check is not supported for ComBatLS.", call. = FALSE)
+    if (type != "lm")
+      stop("ComBatLS uses GAMLSS: keep type = 'lm' and specify GAMLSS effects directly in formula and sigma.formula.", call. = FALSE)
+    if (!is.null(random) || !is.null(smooth) || !is.null(interaction) || !is.null(smooth_int_type))
+      stop("ComBatLS does not support smooth, interaction, random, or smooth_int_type; specify GAMLSS effects directly in formula and sigma.formula.", call. = FALSE)
+    if (is.null(location_formula))
+      stop("ComBatLS requires an explicit location formula, for example formula = y ~ pb(AGE) + SEX (or y ~ 1).", call. = FALSE)
+    .validate_combatls_formula(location_formula, location = TRUE)
+    .validate_combatls_formula(sigma.formula, location = FALSE)
+    .require_combatfamily()
+    fit_comfam <- function(data, bat, covar, model, formula, ref.batch, eb, robust.LS, ...) {
+      .combatls_adapter(data, bat, covar, location_formula, sigma.formula, ref.batch, eb, robust.LS = robust.LS, ...)
+    }
+  } else {
+    if (!missing(sigma.formula)) stop("sigma.formula requires family = 'combatls'.", call. = FALSE)
+    if (!is.null(location_formula)) stop("formula requires family = 'combatls'.", call. = FALSE)
+    fit_comfam <- comfam
+  }
   info <- data_prep(stage = "harmonization", result = result, features = features, batch = batch, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, predict = predict, object = object)
   df <- info$df
   batch <- info$batch
@@ -51,6 +96,16 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
   cov_shiny <- info$cov_shiny
   char_var <- info$char_var
   type <- info$type
+  model_fun <- if (family == "combatls") stats::lm else eval(parse(text = type))
+
+  # Keep the backend setting and saved metadata consistent after feature filtering.
+  if (!eb_check) {
+    if (predict && is.null(reference)) eb <- object$eb
+    if (length(features) == 1L && isTRUE(eb)) {
+      if (!quiet) warning("EB step skipped for univariate data.", call. = FALSE)
+      eb <- FALSE
+    }
+  }
 
   # Empirical Estimates
   if (is.null(covariates)){
@@ -74,26 +129,29 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
     if (is.null(reference)){
       if (!predict){
         message("Starting first-time harmonization...")
-        form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
-        if(family == "comfam"){
+        form <- if (family == "combatls") location_formula else
+          form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
+        if(family %in% c("comfam", "combatls")){
           if(quiet){
-            ComBat_run <- suppressMessages(suppressWarnings(comfam(data = df[features],
+            ComBat_run <- suppressMessages(suppressWarnings(fit_comfam(data = df[features],
                                  bat = df[[batch]],
                                  covar = combat_c,
-                                 model = eval(parse(text = type)),
+                                 model = model_fun,
                                  formula = as.formula(form),
                                  ref.batch = ref.batch,
                                  eb = eb,
+                                 robust.LS = robust.LS,
                                  ...)))
 
           }else{
-            ComBat_run <- comfam(data = df[features],
+            ComBat_run <- fit_comfam(data = df[features],
                                  bat = df[[batch]],
                                  covar = combat_c,
-                                 model = eval(parse(text = type)),
+                                 model = model_fun,
                                  formula = as.formula(form),
                                  ref.batch = ref.batch,
                                  eb = eb,
+                                 robust.LS = robust.LS,
                                  ...)
           }
         }else{
@@ -101,25 +159,28 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
             ComBat_run <- suppressMessages(suppressWarnings(covfam(data = df[features],
                                  bat = df[[batch]] ,
                                  covar = combat_c,
-                                 model = eval(parse(text = type)),
+                                 model = model_fun,
                                  formula = as.formula(form),
                                  ref.batch = ref.batch,
                                  eb = eb,
+                                 robust.LS = robust.LS,
                                  ...)))
           }else{
             ComBat_run <- covfam(data = df[features],
                                  bat = df[[batch]] ,
                                  covar = combat_c,
-                                 model = eval(parse(text = type)),
+                                 model = model_fun,
                                  formula = as.formula(form),
                                  ref.batch = ref.batch,
                                  eb = eb,
+                                 robust.LS = robust.LS,
                                  ...)
             }
         }
       }else{
         message("Starting out-of-sample harmonization using the saved ComBat Model...")
-        ComBat_run <- predict(object = object$ComBat.model, newdata = df[features], newbat = df[[batch]], newcovar = combat_c, eb = object$eb, ...)
+        predict_fit <- if ("pc.output" %in% names(object$ComBat.model)) predict.covfam else predict.comfam
+        ComBat_run <- predict_fit(object = object$ComBat.model, newdata = df[features], newbat = df[[batch]], newcovar = combat_c, eb = eb, robust.LS = robust.LS, ...)
         if("pc.output" %in% names(object$ComBat.model)){
           family <- "covfam"
         }else{family <- "comfam"}
@@ -168,25 +229,28 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
           combat_c <- df_c[cov_shiny]
         }
       }
-      form <- form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
-      if(family == "comfam"){
+      form <- if (family == "combatls") location_formula else
+          form_gen(x = type, c = form_c, i = interaction, random = random, smooth = smooth)
+      if(family %in% c("comfam", "combatls")){
         if(quiet){
-          ComBat_run <- suppressMessages(suppressWarnings(comfam(data = df_c[features],
+          ComBat_run <- suppressMessages(suppressWarnings(fit_comfam(data = df_c[features],
                                bat = df_c[[batch]],
                                covar = combat_c,
-                               model = eval(parse(text = type)),
+                               model = model_fun,
                                formula = as.formula(form),
                                ref.batch = "reference",
                                eb = eb,
+                               robust.LS = robust.LS,
                                ...)))
         }else{
-          ComBat_run <- comfam(data = df_c[features],
+          ComBat_run <- fit_comfam(data = df_c[features],
                                bat = df_c[[batch]],
                                covar = combat_c,
-                               model = eval(parse(text = type)),
+                               model = model_fun,
                                formula = as.formula(form),
                                ref.batch = "reference",
                                eb = eb,
+                               robust.LS = robust.LS,
                                ...)
         }
       }else{
@@ -194,19 +258,21 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
           ComBat_run <- suppressMessages(suppressWarnings(covfam(data = df_c[features],
                                bat = df_c[[batch]] ,
                                covar = combat_c,
-                               model = eval(parse(text = type)),
+                               model = model_fun,
                                formula = as.formula(form),
                                ref.batch = "reference",
                                eb = eb,
+                               robust.LS = robust.LS,
                                ...)))
         }else{
           ComBat_run <- covfam(data = df_c[features],
                                bat = df_c[[batch]] ,
                                covar = combat_c,
-                               model = eval(parse(text = type)),
+                               model = model_fun,
                                formula = as.formula(form),
                                ref.batch = "reference",
                                eb = eb,
+                               robust.LS = robust.LS,
                                ...)
         }
 
@@ -224,21 +290,21 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
         comf_df <- ComBat_run$dat.covbat
         comf_df <- cbind(other_info, df[batch], df[cov_shiny], comf_df)
       }else{
-        com_family <- "comfam"
+        com_family <- family
         comf_df <- ComBat_run$dat.combat
         comf_df <- cbind(other_info, df[batch], df[cov_shiny], comf_df)
       }
     }else{
       if(family == "covfam"){
         com_family <- "covfam"
-        comf_df <- ComBat_run$dat.covbat[(nrow(reference)+1):nrow(df_c),]
+        comf_df <- ComBat_run$dat.covbat[nrow(reference) + seq_len(nrow(new_data)), , drop = FALSE]
         comf_df <- cbind(new_data[other_col], new_data[batch], new_data[cov_shiny], comf_df)
         comf_df <- comf_df[colnames(df)]
         comf_df <- rbind(untouched_included, comf_df)
         if(out_ref_include){comf_df <- rbind(untouched, comf_df) %>% distinct()}
       }else{
-        com_family <- "comfam"
-        comf_df <- ComBat_run$dat.combat[(nrow(reference)+1):nrow(df_c),]
+        com_family <- family
+        comf_df <- ComBat_run$dat.combat[nrow(reference) + seq_len(nrow(new_data)), , drop = FALSE]
         comf_df <- cbind(new_data[other_col], new_data[batch], new_data[cov_shiny], comf_df)
         comf_df <- comf_df[colnames(df)]
         comf_df <- rbind(untouched_included, comf_df)
@@ -246,7 +312,7 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
       }
     }
     comf_df <- comf_df[colnames(df)]
-    combat_result <-  list("com_family" = com_family, "harmonized_df" = comf_df, "combat.object" = list("ComBat.model" = ComBat_run, "batch.name" = batch, "eb" = eb))
+    combat_result <-  list("com_family" = com_family, "harmonized_df" = comf_df, "combat.object" = list("ComBat.model" = ComBat_run, "batch.name" = batch, "eb" = eb, "family" = com_family))
     return(combat_result)
   }else{
     message("Starting Empirical Bayes assumption check...")
@@ -254,9 +320,10 @@ combat_harm <- function(eb_check = FALSE, result = NULL, features = NULL, batch 
     eb_df <- eb_check(data = df[features],
              bat = df[[batch]],
              covar = combat_c,
-             model = eval(parse(text = type)),
+             model = model_fun,
              formula = as.formula(form),
              ref.batch = ref.batch,
+             robust.LS = robust.LS,
              ...)
     return(eb_df)
   }
@@ -923,7 +990,7 @@ predict.covfam <- function(object, newdata, newbat, newcovar = NULL,
     scl <- var
   }
 
-  com_out <- predict(object$combat.out, newdata, newbat, newcovar, robust.LS, eb)
+  com_out <- predict.comfam(object$combat.out, newdata, newbat, newcovar, robust.LS, eb)
   com_res <- com_out$dat.combat - com_out$estimates$stand.mean
 
   #### Adjust for multivariate batch effects via PCA ####
@@ -936,10 +1003,10 @@ predict.covfam <- function(object, newdata, newbat, newcovar = NULL,
   # ComBat without covariates to remove site effect in score mean/variance
   # If score.model specified, fits that model instead
   if (is.null(object$score.model)) {
-    scores_com <- predict(object$scores.combat, full_scores[,1:npc], newbat,
+    scores_com <- predict.comfam(object$scores.combat, full_scores[,1:npc], newbat,
                           eb = FALSE)
   } else {
-    scores_com <- do.call(predict,
+    scores_com <- do.call(predict.comfam,
                           c(list(object$scores.combat, full_scores[,1:npc],
                                  newbat, newcovar, eb = FALSE), score.args))
   }

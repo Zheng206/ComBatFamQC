@@ -39,15 +39,21 @@ Depends:
     R (>= 4.1.0)
 LazyData: true
 Suggests: 
+    argparser,
+    readr,
+    readxl,
+    stringr,
+    ComBatFamily (>= 0.2.2),
     knitr,
     rmarkdown,
     devtools,
-    testthat (>= 3.0.0),
+    testthat (>= 3.1.7),
     remotes,
     plotly,
     quarto,
     spelling,
     systemfonts,
+Remotes: andy1764/ComBatFamily
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Language: en-US

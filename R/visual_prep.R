@@ -153,7 +153,7 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
     lmm_multi <- model_gen(type = type, y = y, batch = batch, covariates = covariates, interaction = interaction, random = random, smooth = smooth, df = df)
     fit_residuals <- resid(lmm_multi)
     FKtest <- fligner.test(fit_residuals ~ df[[batch]])
-    fk_df <- FKtest %>% tidy() %>% dplyr::select(.data[["p.value"]]) %>% mutate(feature = y)
+    fk_df <- FKtest %>% tidy() %>% dplyr::select(dplyr::all_of("p.value")) %>% mutate(feature = y)
     fk_df <- fk_df[c(2,1)]
     return(fk_df)
   }, mc.cores = cores) %>% bind_rows()
@@ -217,7 +217,7 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
   ## Kruskal-Wallis
   kw_test_df <- mclapply(features, function(y){
     KWtest <- kruskal.test(residual_add_df[[y]] ~ residual_add_df[[batch]])
-    kw_df <- KWtest %>% tidy() %>% dplyr::select(.data[["p.value"]]) %>% mutate(feature = y)
+    kw_df <- KWtest %>% tidy() %>% dplyr::select(dplyr::all_of("p.value")) %>% mutate(feature = y)
     kw_df <- kw_df[c(2,1)]
     return(kw_df)
   }, mc.cores = cores) %>% bind_rows()
@@ -236,7 +236,7 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
     lmm_multi <- model_gen(type = type, y = y, batch = batch, covariates = covariates, interaction = interaction, random = random, smooth = smooth, df = df)
     fit_residuals <- resid(lmm_multi)
     LVtest <- leveneTest(fit_residuals ~ as.factor(df[[batch]]))
-    lv_df <- LVtest %>% tidy() %>% dplyr::select(.data[["p.value"]]) %>% mutate(feature = y)
+    lv_df <- LVtest %>% tidy() %>% dplyr::select(dplyr::all_of("p.value")) %>% mutate(feature = y)
     lv_df <- lv_df[c(2,1)]
     return(lv_df)
   }, mc.cores = cores) %>% bind_rows()
@@ -256,7 +256,7 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
     lmm_multi <- model_gen(type = type, y = y, batch = batch, covariates = covariates, interaction = interaction, random = random, smooth = smooth, df = df)
     fit_residuals <- resid(lmm_multi)
     BLtest <- bartlett.test(fit_residuals ~ as.factor(df[[batch]]))
-    bl_df <- BLtest %>% tidy() %>% dplyr::select(.data[["p.value"]]) %>% mutate(feature = y)
+    bl_df <- BLtest %>% tidy() %>% dplyr::select(dplyr::all_of("p.value")) %>% mutate(feature = y)
     bl_df <- bl_df[c(2,1)]
     return(bl_df)
   }, mc.cores = cores) %>% bind_rows()}, error = function(e) {

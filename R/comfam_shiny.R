@@ -1133,7 +1133,7 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
     }
   }else if(plot_name == "resid_add"){
     ## additive residual plot
-    add_mean <- result$residual_add_df %>% group_by(.data[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
+    add_mean <- result$residual_add_df %>% group_by(.data[[batch]]) %>% summarize(across(dplyr::all_of(features), median, .names = "mean_{.col}")) %>% ungroup()
     colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
     result$residual_add_df <- result$residual_add_df %>% left_join(add_mean, by = c(batch))
     if(color == "No"){
@@ -1214,7 +1214,7 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
     }
   }else if(plot_name == "resid_mul"){
     ## multiplicative residual plot
-    add_mean <- result$residual_add_df %>% group_by(.data[[batch]]) %>% summarize(across(features, median, .names = "mean_{.col}")) %>% ungroup()
+    add_mean <- result$residual_add_df %>% group_by(.data[[batch]]) %>% summarize(across(dplyr::all_of(features), median, .names = "mean_{.col}")) %>% ungroup()
     colnames(add_mean) <- c(batch, colnames(add_mean)[-1])
     result$residual_ml_df <- result$residual_ml_df %>% left_join(add_mean, by = c(batch))
     if(color == "No"){
@@ -1581,7 +1581,7 @@ combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL,
     }
 
   }else if(table_name == "pc_variance"){
-    pca_table <- result$pca_summary %>% filter(.data[["Principal_Component"]] %in% c(PC1, PC2)) %>% dplyr::select(.data[["Principal_Component"]], .data[["Variance_Explained"]])
+    pca_table <- result$pca_summary %>% filter(.data[["Principal_Component"]] %in% c(PC1, PC2)) %>% dplyr::select(dplyr::all_of(c("Principal_Component", "Variance_Explained")))
     sum_total_variance <- sum(pca_table$Variance_Explained)
     pca_table %>% add_row(Principal_Component = "Total", Variance_Explained = sum_total_variance) %>% mutate(Variance_Explained = sprintf("%.3f", .data[["Variance_Explained"]])) %>%
       DT::datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all"))))
@@ -1593,34 +1593,34 @@ combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL,
                                                                                   backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
   }else if(table_name == "kenward_roger"){
     if(type == "lmer"){
-      result$kr_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>%
+      result$kr_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>%
         formatStyle('sig', target = 'row', backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))}else{result$kr_test_df %>% DT::datatable()}
   }else if(table_name == "anova"){
-    result$anova_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
+    result$anova_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center', targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
       'sig',
       target = 'row',
       backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
   }else if(table_name == "kruskal_wallis"){
-    result$kw_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center',
+    result$kw_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(options = list(columnDefs = list(list(className = 'dt-center',
                                                                                                                                                     targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
                                                                                                                                                       'sig',
                                                                                                                                                       target = 'row',
                                                                                                                                                       backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
   }else if(table_name == "fligner_killeen"){
-    result$fk_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
+    result$fk_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
                                                                                                                                                                             targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
                                                                                                                                                                               'sig',
                                                                                                                                                                               target = 'row',
                                                                                                                                                                               backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
   }else if(table_name == "levenes"){
-    result$lv_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
+    result$lv_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
                                                                                                                                                                             targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
                                                                                                                                                                               'sig',
                                                                                                                                                                               target = 'row',
                                                                                                                                                                               backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
   }else if(table_name == "bartletts"){
     if(nrow(result$bl_test_df)!=0){
-      result$bl_test_df %>% dplyr::select(.data[["feature"]], .data[["p.value"]], .data[["sig"]]) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
+      result$bl_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
                                                                                                                                                                               targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
                                                                                                                                                                                 'sig',
                                                                                                                                                                                 target = 'row',

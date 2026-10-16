@@ -1,5 +1,6 @@
 suppressMessages(library(argparser))
-suppressMessages(library(tidyverse))
+suppressMessages(library(readr))
+suppressMessages(library(stringr))
 suppressMessages(library(readxl))
 suppressMessages(library(ComBatFamQC))
 suppressMessages(library(parallel))
@@ -10,11 +11,14 @@ p <- add_argument(p, "data", help = "path to the CSV or EXCEL file that contains
 p <- add_argument(p, "--diagnosis", short = '-d', help = "a boolean variable indicating whether to run harmonization or batch effect diagnosis. TRUE indicates batch effect diagnosis.", default = TRUE)
 p <- add_argument(p, "--visualization", short = '-v', help = "a boolean variable indicating whether to start the Shiny app or save only the diagnosis result. TRUE indicates that the Shiny app will be started. False indicates that the diagnosis result will be exported to an EXCEL file or a quarto report.", default = TRUE)
 p <- add_argument(p, "--after", short = '-a', help = "a boolean variable indicating whether the dataset is before or after harmonization. TRUE indicates the dataset is after harmonization.", default = FALSE)
-p <- add_argument(p, "--family", short = '-f', help = "combat family to use, comfam or covfam", default = "comfam")
+p <- add_argument(p, "--family", short = '-f', help = "combat family to use: comfam, covfam, or combatls", default = "comfam")
 p <- add_argument(p, "--features", help = "position of data to be harmonized(column numbers), eg: 1-5,9")
 p <- add_argument(p, "--covariates", short = '-c', help = "position of covariates (column numbers)", default = "NULL")
 p <- add_argument(p, "--batch", short = '-b', help = "position of batch column (column number)")
-p <- add_argument(p, "--model", short = '-m', help = "select the model function for harmonization, eg: lm, gam", default = "lm")
+p <- add_argument(p, "--model", short = '-m', help = paste("Regression model for ComBat/CovBat (lm, gam, lmer).",
+                                                   "ComBatLS always uses GAMLSS; --model is ignored."), default = "lm")
+p <- add_argument(p, "--formula", help = "ComBatLS only, required: quoted mean formula using column names and response y, e.g. 'y ~ pb(AGE) + SEX' or 'y ~ 1'", default = "NULL")
+p <- add_argument(p, "--sigma.formula", help = "ComBatLS only: quoted one-sided scale formula using column names, e.g. '~ pb(AGE) + SEX'; omitted defaults to '~ 1'. Include variables from both formulas in --covariates", default = "NULL")
 p <- add_argument(p, "--smooth", short = '-s', help = "provide the variables that require a smooth function", default = "NULL")
 p <- add_argument(p, "--interaction", help = "specify the interaction terms in the format of col_index1*col_index2, eg 2*3,11*12", default = "NULL")
 p <- add_argument(p, "--int_type", help = "specify an interaction type for gam models, eg: linear, categorical-continuous, factor-smooth, tensor, smooth-smooth", default = "linear")
@@ -39,6 +43,38 @@ argv <- parse_args(p)
 
 # Preprocess inputs
 message('Checking inputs...')
+
+# ComBatLS selects GAMLSS through its family; lm is only the internal API default.
+model_type <- if (argv$family == "combatls" && !argv$diagnosis) "lm" else argv$model
+
+## ComBatLS formula options apply only to first-time harmonization.
+formula_supplied <- argv$formula != "NULL" || argv$sigma.formula != "NULL"
+if (formula_supplied && (argv$family != "combatls" || argv$diagnosis || argv$predict)) {
+  stop("--formula and --sigma.formula require --family combatls --diagnosis FALSE and cannot be used with --predict TRUE.", call. = FALSE)
+}
+if (argv$family == "combatls" && !argv$diagnosis) {
+  if (argv$predict)
+    stop("Saved-model prediction is not supported for ComBatLS; use --reference instead.", call. = FALSE)
+  if (argv$smooth != "NULL" || argv$random != "NULL" || argv$interaction != "NULL" || argv$int_type != "linear")
+    stop("ComBatLS does not support --smooth, --interaction, --random, or --int_type; specify GAMLSS effects directly in --formula and --sigma.formula.", call. = FALSE)
+  if (argv$formula == "NULL")
+    stop("ComBatLS requires --formula, for example 'y ~ pb(AGE) + SEX' (or 'y ~ 1').", call. = FALSE)
+}
+parse_cli_formula <- function(value, option, location) {
+  if (value == "NULL") return(NULL)
+  formula <- tryCatch(stats::as.formula(value), error = function(e) {
+    stop("Invalid ", option, ": ", conditionMessage(e), call. = FALSE)
+  })
+  expected_length <- if (location) 3L else 2L
+  if (length(formula) != expected_length)
+    stop(option, if (location) " must be a two-sided formula with response y." else
+      " must be a one-sided formula, e.g. '~ AGE + SEX'.", call. = FALSE)
+  if (location && !identical(formula[[2L]], quote(y)))
+    stop(option, " must use y as its response.", call. = FALSE)
+  formula
+}
+location_formula <- parse_cli_formula(argv$formula, "--formula", location = TRUE)
+scale_formula <- parse_cli_formula(argv$sigma.formula, "--sigma.formula", location = FALSE)
 
 ## Checking the Data input
 if(is.na(argv$data)) stop("Missing input data") else {
@@ -99,8 +135,22 @@ if(!argv$predict){
     }
   }
 
+  ## Check formula variables before reference loading or harmonization.
+  if (argv$family == "combatls" && !argv$diagnosis) {
+    needed <- unique(c(
+      all.vars(location_formula[[3L]]),
+      all.vars(if (is.null(scale_formula)) ~ 1 else scale_formula)
+    ))
+    missing_vars <- setdiff(needed, covariates)
+    if (length(missing_vars)) {
+      stop("Formula variables missing from --covariates: ",
+           paste(missing_vars, collapse = ", "), call. = FALSE)
+    }
+    # Function availability is resolved separately by the GAMLSS backend.
+  }
+
   ## Checking the Smooth Terms input
-  if(argv$model == "gam"){
+  if(model_type == "gam"){
     if(argv$covariates == "NULL") stop("Please provide covariates for gam model")
     if(argv$smooth == "NULL") stop("Please provide variables that require a smoothing function") else {
       smooth_col <- gsub("-",":",argv$smooth)
@@ -118,7 +168,7 @@ if(!argv$predict){
   }
 
   ## Checking the Random Effects input
-  if(argv$model == "lmer"){
+  if(model_type == "lmer"){
     if(argv$random == "NULL") stop("Please specify random intercept-effects") else {
       random_col <- gsub("-",":",argv$random)
       random_col <- eval(parse(text = paste0("c(", random_col, ")")))
@@ -199,12 +249,19 @@ if(argv$diagnosis){
     stop("The provided file path must end with '.csv'. Please provide a valid CSV file.")
   }
 
-  if(argv$predict){harm_result <- combat_harm(df = df, predict = argv$predict, object = object)}else{
-                  harm_result <- combat_harm(features = features, batch = batch, covariates = covariates, df = df, type = argv$model, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, family = argv$family,
-                            ref.batch = if(argv$ref.batch == "NULL") eval(parse(text = argv$ref.batch)) else argv$ref.batch,
-                            predict = argv$predict,
-                            object = object,
-                            reference = reference_df)}
+  if(argv$predict){
+    harm_result <- combat_harm(df = df, predict = argv$predict, object = object)
+  }else{
+    harm_args <- list(features = features, batch = batch, covariates = covariates,
+                      df = df, type = model_type, random = random, smooth = smooth,
+                      interaction = interaction, smooth_int_type = smooth_int_type,
+                      family = argv$family, eb = argv$eb, robust.LS = argv$robust.LS,
+                      ref.batch = if(argv$ref.batch == "NULL") NULL else argv$ref.batch,
+                      predict = FALSE, object = object, reference = reference_df)
+    if (!is.null(location_formula)) harm_args$formula <- location_formula
+    if (!is.null(scale_formula)) harm_args$sigma.formula <- scale_formula
+    harm_result <- do.call(combat_harm, harm_args)
+  }
 
   comf_df <- harm_result$harmonized_df
 
@@ -216,7 +273,7 @@ if(argv$diagnosis){
       stop("Error: Please provide a path ending with '.rds' for the output file.")
     }
     message("Saving ComBat model......")
-    if(harm_result$com_family == "comfam"){
+    if(harm_result$com_family %in% c("comfam", "combatls")){
       harm_result$combat.object$ComBat.model$dat.combat <- NULL
     }else{
       harm_result$combat.object$ComBat.model$dat.covbat <- NULL

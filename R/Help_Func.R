@@ -130,7 +130,7 @@ data_prep <- function(stage = "harmonization", result = NULL, features = NULL, b
     ## drop univariate features
     features_orig <- df[features]
     n_orig <- length(colnames(features_orig))
-    features_new <- features_orig[, apply(features_orig, 2, function(col) { length(unique(col)) > 1 })]
+    features_new <- features_orig[, apply(features_orig, 2, function(col) { length(unique(col)) > 1 }), drop = FALSE]
     n_new <- length(colnames(features_new))
     dropped_col <- NULL
     if (n_orig > n_new){
@@ -204,7 +204,7 @@ data_prep <- function(stage = "harmonization", result = NULL, features = NULL, b
     ## drop univariate features
     features_orig <- df[features]
     n_orig <- length(colnames(features_orig))
-    features_new <- features_orig[, apply(features_orig, 2, function(col) { length(unique(col)) > 1 })]
+    features_new <- features_orig[, apply(features_orig, 2, function(col) { length(unique(col)) > 1 }), drop = FALSE]
     n_new <- length(colnames(features_new))
     dropped_col <- NULL
     if (n_orig > n_new){
@@ -778,13 +778,13 @@ age_save <- function(path, age_list){
   header_style <- createStyle(textDecoration = "bold", fgFill = "#D3D3D3", halign = "center")
   female_df <- lapply(seq_len(length(age_list)), function(i){
     feature_name <- names(age_list)[i]
-    roi_df <- age_list[[i]]$predicted_df_sex %>% filter(.data[["sex"]] == "F") %>% pivot_wider(names_from = .data[["type"]], values_from = .data[["prediction"]]) %>% mutate(roi = feature_name)
+    roi_df <- age_list[[i]]$predicted_df_sex %>% filter(.data[["sex"]] == "F") %>% pivot_wider(names_from = "type", values_from = "prediction") %>% mutate(roi = feature_name)
     return(roi_df)
   }) %>% bind_rows()
 
   male_df <- lapply(seq_len(length(age_list)), function(i){
     feature_name <- names(age_list)[i]
-    roi_df <- age_list[[i]]$predicted_df_sex %>% filter(.data[["sex"]] == "M") %>% pivot_wider(names_from = .data[["type"]], values_from = .data[["prediction"]]) %>% mutate(roi = feature_name)
+    roi_df <- age_list[[i]]$predicted_df_sex %>% filter(.data[["sex"]] == "M") %>% pivot_wider(names_from = "type", values_from = "prediction") %>% mutate(roi = feature_name)
     return(roi_df)
   }) %>% bind_rows()
 
