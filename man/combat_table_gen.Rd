@@ -10,7 +10,8 @@ combat_table_gen(
   f = NULL,
   c = NULL,
   PC1 = NULL,
-  PC2 = NULL
+  PC2 = NULL,
+  significant_only = FALSE
 )
 }
 \arguments{
@@ -39,6 +40,12 @@ combat_table_gen(
 \item{PC1}{A string specifying the first principal component for PCA variance tables. Default is \code{NULL}.}
 
 \item{PC2}{A string specifying the second principal component for PCA variance tables. Default is \code{NULL}.}
+
+\item{significant_only}{For feature-level batch-effect test tables, show only
+Bonferroni-adjusted p-values below 0.05 (default FALSE). Uses the stored
+full-precision adjusted p-values, or significance symbols for older results
+without numeric values. Does not recalculate tests or multiple-testing
+adjustment and does not affect other table types.}
 }
 \value{
 A \code{DT::datatable} object containing the requested table.

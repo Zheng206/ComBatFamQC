@@ -1,46 +1,27 @@
 # ComBatFamQC (development version)
 
-* Single-feature harmonization now disables EB in the wrapper and records
-  `combat.object$eb = FALSE`, including after feature filtering and during
-  reference harmonization or prediction. Prediction preserves the saved EB setting.
+* Added optional ComBatLS harmonization in R, the CLI, and Shiny, with explicit
+  GAMLSS location and scale formulas, robust estimation, and reference-batch
+  support. A location formula is required; the scale formula defaults to `~ 1`.
 
-* CLI ComBatLS checks variables from both formulas against `--covariates`
-  before reference loading or fitting and reports missing names together.
+* Added ComBatLS model checks with biological scale-covariate screening,
+  BH-adjusted summaries, SD ratios, centile comparisons, and residual diagnostics
+  through `combatls_model_check()`, `combatls_check_centiles()`, and
+  `combatls_check_plot()`.
 
-* Made `robust.LS` explicit in the harmonization wrapper and ComBatLS adapter,
-  and added early location/scale formula structure checks for direct R calls.
-* Added separate-reference ComBatLS regression tests covering formula scope,
-  covariate preprocessing, reference inclusion, and upstream numerical agreement.
-* Avoided the model-name evaluation for ComBatLS and clarified CLI engine help.
+* Improved Shiny layouts and model-check displays, added interactive result
+  filters, and accelerated smooth-model checks and centile predictions by
+  reusing matching fits and batching predictions.
 
-* ComBatLS now requires an explicit location formula in the R API and CLI,
-  retains the optional constant-scale formula default, and rejects legacy smooth,
-  interaction, and random arguments. Other families retain automatic formulas.
+* Added significant-only checkboxes to additive and multiplicative feature-level
+  batch-effect tables, using Bonferroni-adjusted p-values below 0.05.
 
-* CLI ComBatLS harmonization now selects GAMLSS by family and ignores `--model`,
-  so nonlinear formulas require no fitting-engine selector.
+* Added `check_dependencies()` to check required dependencies and optionally
+  install missing or outdated packages.
 
-* Added CLI `--formula` and `--sigma.formula` options for ComBatLS, including
-  validation, the constant-scale default, and formula-based interactions.
-* Fixed CLI forwarding of `--eb` and `--robust.LS` to harmonization fits, and
-  declared its smaller set of optional dependencies instead of loading tidyverse.
-
-* ComBatLS now accepts explicit GAMLSS location and scale formulas, defaults to
-  `sigma.formula = ~ 1`, and rejects mgcv smoother syntax instead of translating
-  `s()` to `ps()`. Automatic mean-to-scale formula inheritance was removed.
-
-* Fixed installed-package ComBatLS fits failing to resolve `NO()` by passing
-  explicitly namespaced GAMLSS functions to the upstream core implementation.
-* Replaced deprecated `.data` column selection in diagnostics, tables, and age
-  exports to remove tidyselect deprecation warnings.
-
-* Added optional ComBatLS through a thin adapter to ComBatFamily, using
-  `combat_harm(family = "combatls")` and the existing result structure.
-* Added `check_dependencies()` to report missing, outdated, or unloadable
-  dependencies and optionally install them from CRAN or upstream GitHub.
-* Preserved single-feature inputs during harmonization preparation and handled
-  matrix dimensions when selecting harmonized reference output.
-* Made internal ComBat prediction dispatch explicit when ComBatFamily is loaded.
+* Fixed single-feature harmonization by disabling EB, improved reference
+  harmonization and prediction handling, and corrected model saving, formula
+  validation, and deprecated column-selection warnings.
 
 # ComBatFamQC 1.0.6
 * Added the systemfonts package as a suggested dependency and implemented a skip mechanism for both com_shiny() and age_shiny() if the package is not installed. This should resolve the testing issue on r-oldrel-macos-arm64.

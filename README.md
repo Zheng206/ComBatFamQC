@@ -148,6 +148,146 @@ currently unavailable for ComBatLS.
 Extra fitting options, such as `control = gamlss::gamlss.control(trace = FALSE)`,
 pass through to ComBatFamily. The CLI accepts `--family combatls` as well.
 
+### ComBatLS in Shiny
+
+When ComBatFamily (>= 0.2.2) can load, the interactive **Harmonization** tab
+includes `combatls` in the family selector. Enter a required location formula
+(for example, `y ~ pb(AGE) + SEX`) and optionally change the scale formula from
+`~ 1`. Available covariates are listed beside the formula inputs. Robust location
+and scale estimation is optional; the existing EB and reference-batch controls
+also apply. Data and fitted models use the existing save controls.
+
+Selecting ComBatLS replaces the EB Check area with **Scale Model Check**:
+
+1. Specify the location and proposed scale formulas.
+2. Select candidate biological scale covariates and click **Run Model Check**.
+3. Review **Covariate screening**, **Centile curves**, and the fitting-status message.
+4. Review or edit the proposed scale formula, rerun the check if it changed, then
+   harmonize and save through the existing controls.
+
+The screening model always includes the selected candidates in scale, even when
+the proposed scale formula is `~ 1`. By default candidates enter linearly; an
+optional exploratory formula such as `~ pb(AGE) + SEX` screens smooth effects.
+Batch terms enter both location and scale. Each candidate is tested by jointly
+removing all its scale terms, including interactions and entire smooth terms,
+while leaving location unchanged. The heatmap shows BH-adjusted p-values
+(Benjamini-Hochberg adjustment) across features **separately for each candidate**.
+The internal `q.value` field holds these adjusted p-values; it is not a Storey
+q-value. The Shiny interface labels it **BH-adjusted p-value**. Failed comparisons
+remain in the correction family and are shown as unavailable. Smooth-model LRTs
+use effective degrees of freedom and are **approximate**; inspect fit warnings.
+
+Liberal screening drafts are optional: **Use suggested scale formula**
+copies a draft into the editable field only after you request it. The draft includes
+any candidate with at least one feature with a BH-adjusted p-value < 0.05, retaining interaction
+marginal terms. It is **not an optimal model**: a covariate significant for 1 of
+62 features still enters this liberal draft. Review scientific relevance and
+sensitivity analyses rather than accepting it solely on significance. Significance
+never changes your formula automatically. Prespecified biology can justify
+retaining effects with nonsignificant screening results; repeated testing and
+model selection can overfit.
+
+The R screening summary includes significant-feature percentages relative to all
+features and to valid tests (failed comparisons are excluded only from the latter
+denominator). `effects` reports screening-model conditional SD ratios: `exp(eta)`
+for a one-unit increase in an additive linear covariate, and group-specific ratios
+versus the first factor level for additive categorical effects. For example,
+`eta = 0.2` means about a 22% SD increase per original unit. These are associations,
+not causal effects. `effect_summary` gives median and quartiles across **all
+estimable features**, including nonsignificant ones. Smooth, transformed, or
+interaction effects have no single constant ratio and are marked unavailable;
+inspect their centile curves instead.
+
+In Shiny, screening displays a 650-pixel heatmap without crowded feature or tile
+labels, a **Biological Scale Summary**, and a collapsible **Feature-wise results**
+table. The summary shows significant features as a count over all features, their
+percentage, valid-test counts, and the median SD ratio when a single contrast is
+meaningful. Multiple categorical contrasts remain in the detailed table. Joint
+test p-values are repeated for those contrasts, not calculated separately.
+The feature-wise table highlights significant rows and sorts on the full numeric
+BH-adjusted p-value, with unavailable tests last. A covariate selector and a
+significant-only checkbox filter the view without recalculating the adjustment.
+A separate `sig` column marks BH-adjusted p-values with `*` below 0.05,
+`**` below 0.01, and `***` below 0.001. Significant p-values appear in red and
+their rows in light yellow. Contrast labels, SD ratios and SD
+changes remain visible; unadjusted p-values are hidden by default. Test statistics,
+degrees of freedom, methods and diagnostic statuses remain in the R results.
+Decimals use three places, and p-values below 0.001 display as `<0.001`; the saved
+R results retain full numeric precision. Evidence categories reflect statistical
+thresholds, not scientific importance, and nonsignificance does not establish
+absence of a biological effect.
+
+Shiny shows two model-check tabs: **Covariate Screening** and **Centile Curves**.
+Feature and model controls live in Centile Curves; the model selector appears only
+when viewing a single model. A compact fitting-status message reports convergence,
+identifiability, and fits with warnings or errors. Fitting status does not establish
+model adequacy. Residual diagnostics and full convergence details remain available
+in R through `combatls_check_plot(check, "qq")`,
+`combatls_check_plot(check, "residuals", x = "AGE")`, and `check$diagnostics`.
+
+The proposed and exploratory fits, normalized quantile residuals, convergence
+status, and fitted distribution parameters are cached. Plot changes do not run
+GAMLSS fitting again. Editing either formula, the candidates, or the reference
+batch marks the check stale until you explicitly rerun it. Model checking never
+produces harmonized observations. The fits assume independent observations.
+
+Centile curves overlay solid medians with darker 25th-75th and lighter 5th-95th
+centile bands, colored by proposed or screening model. Both models use an identical
+covariate grid, holding other covariates at medians or modal levels. These bands
+show fitted distributional spread, **not confidence intervals**. Ungrouped plots
+have no facet header. AGE is the default horizontal covariate when available;
+feature choices are ordered by adjusted p-value for that covariate, preserving
+the selected feature. This ordering reflects statistical evidence, not effect size.
+
+An SD comparison beneath the plot evaluates both fitted models at the observed
+25th and 75th percentiles of the horizontal covariate, separately within each
+selected group. It reports original covariate values, fitted SDs, and
+`100 * (SD_upper / SD_lower - 1)`. Exact quantile predictions use the cached fits;
+no model fitting is repeated. R users can obtain the corresponding distribution
+parameters with `combatls_check_centiles(..., x.quantiles = c(.25, .75),
+probabilities = .5, model = "both")`.
+
+Raw observations can be added using **Show observed measurements** (off by
+default), or `show.points = TRUE` in `combatls_check_plot()`. They retain their own
+biological covariates and batch effects. The gray overlay describes observed
+spread and does not test calibration against the plotted reference profile.
+
+Location and log-scale batch effects are pooled using observed batch proportions or the selected reference batch.
+These are conditional, model-implied exploratory targets, **not empirical
+population centiles or EB-adjusted harmonization outputs**. Q-Q plots and
+residual-versus-covariate plots assess in-sample goodness of fit through the R API.
+The concise note beneath the plot explains that curves show a batch-targeted
+biological profile, bands are centiles rather than confidence intervals, and these
+exploratory results do not establish model adequacy. The optional raw-points note
+explains their different biological and batch profiles. Residual checks remain
+available in R, particularly for interpreting the tails.
+
+The fitting and plotting stages are also available in R:
+
+```r
+check <- combatls_model_check(
+  df = adni, features = colnames(adni)[43:46], batch = "manufac",
+  covariates = c("AGE", "SEX"), formula = y ~ AGE + SEX,
+  sigma.formula = ~ 1, candidates = c("AGE", "SEX")
+)
+check$screening
+check$summary
+check$effect_summary
+check$effects
+check$diagnostics
+combatls_check_plot(check, "screening")
+combatls_check_plot(check, "qq", feature = check$features[1])
+combatls_check_plot(check, "centiles", feature = check$features[1], x = "AGE", group = "SEX", model = "both")
+```
+
+The legacy model, smooth, random, interaction, and EB assumption diagnostic
+controls remain available for ComBat/CovBat. If ComBatFamily cannot load, the
+original interface is shown. Formula errors produce notifications without saving
+a new harmonization result.
+
+Statistical references: [GAMLSS model comparisons and prediction](https://gamlss-dev.r-universe.dev/gamlss/doc/manual.html),
+[ComBatLS](https://doi.org/10.1002/hbm.70197).
+
 ### ComBatLS from the command line
 
 The CLI requires `argparser`, `readr`, `readxl`, and `stringr`, plus the optional

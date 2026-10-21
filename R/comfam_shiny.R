@@ -20,6 +20,17 @@
 #' @details
 #' When this function is called, it starts a Shiny application in the
 #' user's default web browser. Execution is blocked until the app is closed.
+#' Feature-level batch-effect tables can be filtered to Bonferroni-adjusted
+#' p-values below 0.05; the reported percentages still use all features.
+#' When a compatible optional ComBatFamily backend is available, the harmonization
+#' tab also offers ComBatLS with an explicit location formula, an optional scale
+#' formula (default `~ 1`), and robust estimation. Legacy model controls and the
+#' EB assumption diagnostic are replaced by a pre-harmonization Scale Model Check:
+#' candidate screening and model-implied centiles, with a compact fitting status.
+#' Residual diagnostics remain available through `combatls_check_plot()` in R.
+#' Fits are cached until Run Model Check is clicked again; edits mark results stale.
+#' Scale-formula drafts are applied only on explicit user acceptance. Otherwise, only the original
+#' ComBat/CovBat interface is shown.
 #'
 #' @examples
 #' result_lm <- visual_prep(type = "lm", features = colnames(adni)[43:53],
@@ -39,14 +50,79 @@ comfam_shiny <- function(result, after = FALSE){
   covariates <- info$cov_shiny
   char_var <- info$char_var
   num_var <- setdiff(covariates, char_var)
+  numeric_covariates <- covariates[vapply(df[covariates], is.numeric, logical(1))]
+  age_covariates <- c(numeric_covariates[tolower(numeric_covariates) == "age"],
+    numeric_covariates[grepl("^age_", numeric_covariates, ignore.case = TRUE)])
+  default_curve_x <- if (length(age_covariates)) age_covariates[1L] else
+    if (length(numeric_covariates)) numeric_covariates[1L] else character()
+  combatls_available <- .combatfamily_available()
+  harmonization_families <- c("comfam", "covfam", if (combatls_available) "combatls")
+  legacy_controls <- function(...) {
+    if (combatls_available) conditionalPanel("input.com_type != 'combatls'", ...)
+    else tagList(...)
+  }
 
   ## UI Design
   ui <- function(request) {
     fluidPage(
       theme = bslib::bs_theme(version = 4, bootswatch = "minty"),
+      tags$head(tags$style(HTML("
+        #combatqc-sidebar .row { margin-left: 0; margin-right: 0; }
+        #combatqc-sidebar .box,
+        #combatqc-sidebar .shiny-input-container {
+          width: 100% !important;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+        #combatqc-sidebar .form-control,
+        #combatqc-sidebar .selectize-control,
+        #combatqc-sidebar .selectize-input {
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+        #combatqc-sidebar .box-body,
+        #combatqc-sidebar .help-block,
+        #combatqc-sidebar label,
+        #combatqc-sidebar .shiny-text-output {
+          overflow-wrap: anywhere;
+        }
+        #combatqc-sidebar pre {
+          max-width: 100%;
+          white-space: pre-wrap;
+          overflow-wrap: anywhere;
+          word-break: normal;
+        }
+        #combatqc-sidebar .btn {
+          max-width: 100%;
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+        #combatqc-main { min-width: 0; }
+        #scale_compare_centiles + span { white-space: nowrap; }
+        #combatqc-main .datatables {
+          max-width: 100%;
+          overflow-x: auto;
+        }
+        #combatqc-main .combatqc-check-output {
+          display: flow-root;
+          clear: both;
+          margin: 1rem 0;
+        }
+        #combatqc-main .combatqc-check-output .shiny-output-error {
+          height: auto !important;
+          min-height: 3rem;
+          padding: 0.5rem 0;
+          white-space: normal;
+          overflow-wrap: anywhere;
+          line-height: 1.5;
+        }
+      "))),
       titlePanel("Batch Effect Diagnostics"),
       sidebarLayout(
         sidebarPanel(
+          id = "combatqc-sidebar",
           conditionalPanel(condition="input.tabselected==2",
                            fluidRow(
                              shinydashboard::box(
@@ -95,28 +171,54 @@ comfam_shiny <- function(result, after = FALSE){
                              shinydashboard::box(
                                width = NULL,
                                title = "Harmonization Setup",
-                               radioButtons("com_type", "Select ComBatFam type", choices = c("comfam", "covfam"), selected = "comfam"),
+                               radioButtons("com_type", "Select ComBatFam type", choices = harmonization_families, selected = "comfam"),
                                uiOutput("com_type_note"),
-                               radioButtons("com_model", "Select ComBat Family model to be used", choices = c("lm", "lmer", "gam"), selected = type),
-                               uiOutput("com_model_note"),
+                               legacy_controls(radioButtons("com_model", "Select ComBat Family model to be used", choices = c("lm", "lmer", "gam"), selected = type),
+                               uiOutput("com_model_note")),
                                radioButtons("eb_control", "Select whether the Empirical Bayes (EB) method should be used", choices = c("Yes", "No"), selected = "Yes"),
-                               uiOutput("smooth_select"),
-                               uiOutput("random_select"),
+                               legacy_controls(uiOutput("smooth_select"),
+                                               uiOutput("random_select")),
                                selectInput("ref_bat_select", "Select the reference batch", choices = c("None", levels(df[[batch]])), selected = "None"),
-                               textInput("interaction", "Enter the potential interaction terms:", value = paste0(gsub("\\,", "\\*", info$interaction_orig), collapse = ",")),
+                               legacy_controls(textInput("interaction", "Enter the potential interaction terms:", value = paste0(gsub("\\,", "\\*", info$interaction_orig), collapse = ",")),
                                uiOutput("interaction_note"),
                                uiOutput("smooth_int_type_control"),
-                               uiOutput("smooth_int_type_control_note")
+                               uiOutput("smooth_int_type_control_note")),
+                               if (combatls_available) conditionalPanel(
+                                 "input.com_type == 'combatls'",
+                                 textInput("combatls_formula", "Location formula (required)",
+                                           value = "", placeholder = "y ~ pb(AGE) + SEX"),
+                                 helpText("Use y as the location response. Examples: y ~ AGE + SEX; y ~ pb(AGE) + SEX."),
+                                 textInput("combatls_sigma_formula", "Scale formula", value = "~ 1"),
+                                 helpText("Scale examples: ~ 1; ~ AGE + SEX."),
+                                 checkboxInput("combatls_robust", "Use robust location and scale estimates", value = FALSE),
+                                 helpText(paste("Available covariates:", if (length(covariates)) paste(covariates, collapse = ", ") else "none (use y ~ 1 and ~ 1)."))
+                               )
                              )
                            ),
                            fluidRow(
                              shinydashboard::box(
                                width = NULL,
                                title = "Harmonization",
-                               uiOutput("eb_check_description"),
-                               actionButton("eb_check_button", "EB Check"),
-                               uiOutput("non_eb"),
-                               selectInput("batch_selection", "Select the batches to be shown on the graph", choices = c("All", levels(info$df[[batch]])), selected = "All"),
+                               legacy_controls(uiOutput("eb_check_description"),
+                                               actionButton("eb_check_button", "EB Check"),
+                                               uiOutput("non_eb"),
+                                               selectInput("batch_selection", "Select the batches to be shown on the graph", choices = c("All", levels(info$df[[batch]])), selected = "All")),
+                               if (combatls_available) conditionalPanel(
+                                 "input.com_type == 'combatls'",
+                                 h4("Scale Model Check"),
+                                 checkboxGroupInput("scale_candidates", "Candidate biological scale covariates",
+                                                    choices = covariates, selected = covariates),
+                                 textInput("scale_screen_formula", "Exploratory scale formula (optional)",
+                                           placeholder = "~ pb(AGE) + SEX"),
+                                 helpText("If blank, the screening model includes all selected candidates linearly, even when the proposed scale formula is ~ 1. Batch effects enter location and scale."),
+                                 actionButton("scale_model_check", "Run Model Check"),
+                                 conditionalPanel(
+                                   "output.scale_check_ready == true",
+                                   verbatimTextOutput("scale_formula_suggestion"),
+                                   actionButton("scale_accept_suggestion", "Use suggested scale formula")
+                                 ),
+                                 helpText("Screening informs review; biological knowledge may justify retaining nonsignificant covariates. The proposed scale formula changes only when you accept or edit it.")
+                               ),
                                textInput("save_path", "Save harmonized dataframe to:"),
                                actionButton("ComBat", "Harmonize and Save Data"),
                                verbatimTextOutput("output_msg"),
@@ -161,6 +263,7 @@ comfam_shiny <- function(result, after = FALSE){
                            uiOutput("explore_bar")
           )),
         mainPanel(
+          id = "combatqc-main",
           tabsetPanel(
             tabPanel("Data Overview", value = 1,
                      fluidRow(
@@ -218,17 +321,93 @@ comfam_shiny <- function(result, after = FALSE){
                        shinydashboard::box(
                          width = 12,
                          title = "Additive Batch Effect Test",
+                         checkboxInput("batch_significant_only",
+                           "Show significant results only (Bonferroni-adjusted p < 0.05)",
+                           value = FALSE, width = "100%"),
                          shiny::uiOutput("test_batch_ui"),
                          shiny::uiOutput("sig_pct_batch"))),
                      fluidRow(
                        shinydashboard::box(
                          width = 12,
                          title = "Multiplicative Batch Effect Test",
+                         checkboxInput("variance_significant_only",
+                           "Show significant results only (Bonferroni-adjusted p < 0.05)",
+                           value = FALSE, width = "100%"),
                          shiny::uiOutput("test_variance_ui"),
                          shiny::uiOutput("sig_pct_variance")))),
             if(!after){
               tabPanel("Harmonization", value = 6,
-                       fluidRow(
+                       if (combatls_available) conditionalPanel(
+                         "input.com_type == 'combatls'",
+                         h4("ComBatLS - Scale Model Check"),
+                         p("Run Model Check before harmonization. These exploratory normal GAMLSS fits include batch effects in both location and scale; no harmonized data are generated. Plot changes reuse the saved fits."),
+                         uiOutput("scale_check_prompt"),
+                         conditionalPanel(
+                           "output.scale_check_ready == true",
+                           helpText(textOutput("scale_check_status")),
+                           tabsetPanel(
+                             tabPanel("Covariate screening",
+                                      helpText("Screen biological effects on variability before harmonization. Smooth-model tests are approximate; gray tiles indicate unavailable tests."),
+                                      checkboxInput("scale_heatmap_y_labels", "Show feature names on y-axis", value = TRUE),
+                                      plotOutput("scale_screen_heatmap", height = "650px", width = "100%"),
+                                      h4("Biological Scale Summary"),
+                                      div(class = "combatqc-check-output",
+                                          DT::DTOutput("scale_screen_summary", fill = FALSE)),
+                                      tags$details(
+                                        tags$summary(tags$strong("How to interpret these results")),
+                                        p(tags$strong("Significant features"),
+                                          " is the number of features with a BH-adjusted p-value below 0.05 for that covariate. BH adjustment is applied across features separately for each covariate. A nonsignificant result does not show that variability is constant."),
+                                        p(tags$strong("Median SD ratio"),
+                                          " summarizes the estimated change across features with an available estimate, including nonsignificant features. Read it using the contrast shown in the table:"),
+                                        tags$ul(
+                                          tags$li(tags$strong("1:"), " No estimated change in SD"),
+                                          tags$li(tags$strong("Above 1:"), " Higher estimated SD"),
+                                          tags$li(tags$strong("Below 1:"), " Lower estimated SD")
+                                        ),
+                                        p("For smooth effects or covariates with multiple contrasts, use the feature-wise results and centile curves; one ratio cannot summarize the full pattern.")
+                                      ),
+                                      tags$details(
+                                        tags$summary(tags$strong("View feature-wise results")),
+                                        h4("Feature-wise Scale Associations"),
+                                        selectInput("scale_table_covariate", "Select biological covariate",
+                                          choices = c("All" = "", stats::setNames(covariates, covariates)),
+                                          selected = "", width = "100%"),
+                                        checkboxInput("scale_significant_only",
+                                          "Show significant results only (BH-adjusted p < 0.05)", value = FALSE, width = "100%"),
+                                        div(class = "combatqc-check-output",
+                                            DT::DTOutput("scale_screen_tests", fill = FALSE))
+                                      )),
+                             tabPanel("Centile curves",
+                                      selectInput("scale_centile_feature", "Feature", choices = features, selected = features[1], width = "100%"),
+                                      checkboxInput("scale_compare_centiles", "Compare proposed and screening centiles", value = TRUE, width = "100%"),
+                                      conditionalPanel(
+                                        "!input.scale_compare_centiles",
+                                        radioButtons("scale_centile_model", "Scale model",
+                                          choices = c("Proposed" = "proposed", "Screening" = "screening"),
+                                          selected = "proposed", inline = TRUE)
+                                      ),
+                                      selectInput("scale_curve_x", "Horizontal covariate (original units)",
+                                        choices = numeric_covariates, selected = default_curve_x),
+                                      helpText(textOutput("scale_centile_feature_note")),
+                                      selectInput("scale_curve_group", "Separate curves by", choices = c("None", char_var), selected = "None"),
+                                      checkboxInput("scale_show_points", "Show observed measurements", value = FALSE),
+                                      conditionalPanel("input.scale_show_points",
+                                        helpText("Gray points are raw measurements with their own covariates and batch effects. They show observed spread, not calibrated observations from the displayed reference distribution.")),
+                                      plotOutput("scale_centiles"),
+                                      helpText("Curves show the fitted distribution for the displayed biological profile, standardized to the chosen batch target. Darker bands show the 25th-75th centiles and lighter bands the 5th-95th centiles, not confidence intervals. These exploratory results do not establish model adequacy."),
+                                      tags$details(tags$summary(tags$strong("Biological profile and batch target")),
+                                        p("The centile curves vary the covariates shown in the plot while holding other numeric covariates at their medians and categorical covariates at their most common levels. Predictions use either a reference batch or batch effects averaged on the model\u2019s link scale, weighted by the observed batch proportions. To assess model fit beyond the predicted centiles, use ",
+                                          tags$code("combatls_check_plot()"),
+                                          " in R to examine residual Q\u2013Q plots and residual patterns across covariates.")),
+                                      h4("Estimated conditional variability"),
+                                      helpText("SD is compared at the observed 25th and 75th percentiles of the horizontal covariate, within each group when separated. Values use the covariate's original units; changes are descriptive model estimates."),
+                                      div(class = "combatqc-check-output",
+                                        DT::DTOutput("scale_variability", fill = FALSE)))
+
+                           )
+                         )
+                       ),
+                       legacy_controls(fluidRow(
                          shinydashboard::box(
                            width = 12,
                            shiny::uiOutput("eb_explain"))),
@@ -241,7 +420,7 @@ comfam_shiny <- function(result, after = FALSE){
                          shinydashboard::box(
                            width = 12,
                            title = "Scale Paramaters",
-                           shiny::plotOutput("eb_scale"))))
+                           shiny::plotOutput("eb_scale")))))
             },
             id = "tabselected"
           )
@@ -252,6 +431,141 @@ comfam_shiny <- function(result, after = FALSE){
   ## Server Design
   server <- function(input, output, session) {
     combat_result_s <- reactiveVal(NULL)
+    scale_check_s <- reactiveVal(NULL)
+    scale_check_spec <- reactive({
+      list(location = input$combatls_formula, scale = input$combatls_sigma_formula,
+           candidates = input$scale_candidates, exploratory = input$scale_screen_formula,
+           reference = input$ref_bat_select)
+    })
+    scale_check_ready <- reactive({
+      saved <- scale_check_s()
+      identical(input$com_type, "combatls") && !is.null(saved) &&
+        identical(saved$input_spec, scale_check_spec())
+    })
+    output$scale_check_ready <- function(...) { scale_check_ready() }
+    outputOptions(output, "scale_check_ready", suspendWhenHidden = FALSE)
+    output$scale_check_prompt <- renderUI({
+      req(identical(input$com_type, "combatls"))
+      saved <- scale_check_s()
+      if (is.null(saved))
+        return(helpText("Run Model Check to generate pre-harmonization diagnostics."))
+      if (!scale_check_ready())
+        return(helpText("Model settings have changed. Run Model Check again."))
+      NULL
+    })
+    current_scale_check <- reactive({
+      req(scale_check_ready())
+      scale_check_s()
+    })
+
+    observeEvent(input$scale_model_check, {
+      req(combatls_available, identical(input$com_type, "combatls"))
+      scale_check_s(NULL)
+      tryCatch({
+        location <- trimws(if (is.null(input$combatls_formula)) "" else input$combatls_formula)
+        if (!nzchar(location)) stop("Enter a location formula before running Model Check.", call. = FALSE)
+        scale <- trimws(if (is.null(input$combatls_sigma_formula)) "" else input$combatls_sigma_formula)
+        exploratory <- trimws(if (is.null(input$scale_screen_formula)) "" else input$scale_screen_formula)
+        checked <- withProgress(message = "Checking GAMLSS scale models...", value = 0.5, {
+          combatls_model_check(result = result, formula = stats::as.formula(location),
+            sigma.formula = stats::as.formula(if (nzchar(scale)) scale else "~ 1"),
+            screen.formula = if (nzchar(exploratory)) stats::as.formula(exploratory) else NULL,
+            candidates = if (is.null(input$scale_candidates)) character() else input$scale_candidates,
+            ref.batch = if (is.null(input$ref_bat_select) || input$ref_bat_select == "None") NULL else input$ref_bat_select)
+        })
+        checked$input_spec <- scale_check_spec()
+        scale_check_s(checked)
+        showNotification("Model check complete. Review screening, centiles, and fitting status before harmonization.", type = "message")
+      }, error = function(e) showNotification(conditionMessage(e), type = "error", duration = NULL))
+    })
+    output$scale_check_status <- renderText({
+      checked <- current_scale_check()
+      diagnostics <- checked$diagnostics
+      issues <- sum(!diagnostics$valid | nzchar(diagnostics$message), na.rm = TRUE)
+      paste("Fitting status:", sum(diagnostics$valid), "of", nrow(diagnostics),
+            "fits converged and identifiable (including screening comparisons);",
+            issues, "fits reported warnings or errors. Exploratory fits assume independent observations.")
+    })
+    output$scale_formula_suggestion <- renderText({
+      checked <- current_scale_check()
+      if (is.null(checked$suggested.formula)) return("No formula draft is available from valid comparisons.")
+      paste(gsub("q < 0.05", "BH-adjusted p-value < 0.05", checked$suggestion.rule, fixed = TRUE), "Formula for manual review:", paste(deparse(checked$suggested.formula), collapse = " "))
+    })
+    observeEvent(input$scale_accept_suggestion, {
+      checked <- current_scale_check()
+      req(!is.null(checked$suggested.formula))
+      updateTextInput(session, "combatls_sigma_formula", value = paste(deparse(checked$suggested.formula), collapse = " "))
+      showNotification("Formula draft copied. Review or edit it, then rerun Model Check.", type = "message")
+    })
+    output$scale_screen_heatmap <- renderPlot({
+      checked <- current_scale_check()
+      validate(need(nrow(checked$screening) > 0, "Select candidate scale covariates to screen."))
+      combatls_check_plot(checked, "screening",
+        show.y.labels = !identical(input$scale_heatmap_y_labels, FALSE))
+    })
+    scale_screen_tables <- reactive({ .combatls_screening_display(current_scale_check()) })
+    output$scale_screen_summary <- DT::renderDT({
+      DT::datatable(scale_screen_tables()$summary, rownames = FALSE,
+                    options = list(pageLength = 10, scrollX = TRUE))
+    })
+    scale_association_rows <- reactive({
+      .combatls_filter_associations(scale_screen_tables()$details,
+        covariate = input$scale_table_covariate,
+        significant_only = input$scale_significant_only)
+    })
+    output$scale_screen_tests <- DT::renderDT({
+      .combatls_associations_table(scale_association_rows())
+    })
+    observe({
+      checked <- current_scale_check()
+      req(input$scale_curve_x)
+      choices <- .combatls_centile_feature_order(checked, input$scale_curve_x)
+      selected <- isolate(input$scale_centile_feature)
+      if (is.null(selected) || !selected %in% choices) selected <- choices[1L]
+      updateSelectInput(session, "scale_centile_feature", choices = choices, selected = selected)
+    })
+    output$scale_centile_feature_note <- renderText({
+      checked <- current_scale_check()
+      req(input$scale_curve_x)
+      if (!input$scale_curve_x %in% checked$candidates)
+        return("No scale screening for this covariate; features retain their original order.")
+      NULL
+    })
+    scale_centile_spec <- reactive({
+      checked <- current_scale_check()
+      req(input$scale_centile_feature, input$scale_curve_x)
+      if (!isTRUE(input$scale_compare_centiles)) req(input$scale_centile_model)
+      list(check = checked, feature = input$scale_centile_feature, x = input$scale_curve_x,
+        group = if (is.null(input$scale_curve_group) || input$scale_curve_group == "None") NULL else input$scale_curve_group,
+        model = if (isTRUE(input$scale_compare_centiles)) "both" else input$scale_centile_model)
+    })
+    scale_centile_plot_cached <- reactive({
+      spec <- scale_centile_spec()
+      # GAMLSS smooth prediction inspects sys.calls(). Keep the fitted object
+      # out of the call itself: do.call() embeds it and makes pb() very slow.
+      tryCatch(combatls_check_plot(spec$check, type = "centiles", feature = spec$feature,
+                 x = spec$x, group = spec$group, model = spec$model),
+               error = function(e) validate(need(FALSE, conditionMessage(e))))
+    })
+    output$scale_centiles <- renderPlot({
+      plot <- scale_centile_plot_cached()
+      if (isTRUE(input$scale_show_points)) {
+        spec <- scale_centile_spec()
+        plot <- .combatls_add_observations(plot, spec$check, spec$feature, spec$x, spec$group)
+      }
+      plot + labs(caption = NULL)
+    })
+    scale_variability <- reactive({
+      spec <- scale_centile_spec()
+      tryCatch(.combatls_centile_variability(spec$check, spec$feature, spec$x,
+                 spec$group, model = spec$model),
+               error = function(e) validate(need(FALSE, conditionMessage(e))))
+    })
+    output$scale_variability <- DT::renderDT({
+      spec <- scale_centile_spec()
+      DT::datatable(.combatls_variability_display(scale_variability(), spec$x, spec$group),
+        rownames = FALSE, options = list(dom = "t", paging = FALSE, ordering = FALSE, scrollX = TRUE))
+    })
 
     ############### Data Overview #############################
     output$explore_bar <- shiny::renderUI({
@@ -559,12 +873,15 @@ comfam_shiny <- function(result, after = FALSE){
     output$com_type_note <- renderUI({
       if(input$com_type == "comfam"){
         HTML(print("<strong>Note</strong>: Correcting Batch Effects <strong>(ComBat Family)</strong> <br><br>"))
+      }else if (identical(input$com_type, "combatls")) {
+        HTML("<strong>ComBatLS</strong>: preserve covariate effects in location and scale using GAMLSS formulas.<br><br>")
       }else{
         HTML(print("<strong>Note</strong>: Correcting Covariance Batch Effects <strong>(CovBat Family)</strong> <br><br>"))
       }
     })
 
     output$com_model_note <- renderUI({
+      if (identical(input$com_type, "combatls")) return(NULL)
       if(input$com_model == "lm"){
         HTML(print("<strong>Note</strong>: a method designed for batch effect correction in cross-sectional data with linear covariate effects. <strong>(Original ComBat)</strong> <br><br>"))
       }else if(input$com_model == "lmer"){
@@ -575,28 +892,33 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     output$smooth_select <- renderUI({
+      if (identical(input$com_type, "combatls")) return(NULL)
       if(input$com_model == "gam"){
         checkboxGroupInput("smooth", "Select smooth terms:", choices = result$info$cov_shiny, selected = info$smooth_orig)
       }
     })
 
     output$random_select <- renderUI({
+      if (identical(input$com_type, "combatls")) return(NULL)
       if(input$com_model == "lmer"){
         selectInput("random", "Select the random effect when considering longitudinal combat", choices = colnames(info$df), selected = colnames(info$df)[1])
       }
     })
 
     output$interaction_note <- renderUI({
+      if (identical(input$com_type, "combatls")) return(NULL)
       HTML(print("eg: covariate1*covariate2,covariate3*covariate4 <br><br>"))
     })
 
     output$smooth_int_type_control <- renderUI({
+      if (identical(input$com_type, "combatls")) return(NULL)
       if(input$com_model == "gam"){
         textInput("smooth_int_type", "Enter the types of potential interaction terms:", value = paste0(info$smooth_int_type, collapse = ","))
       }
     })
 
     output$smooth_int_type_control_note <- renderUI({
+      if (identical(input$com_type, "combatls")) return(NULL)
       if(input$com_model == "gam"){
         HTML(paste0("eg: linear,factor-smooth <br><br>",
                     "<strong>Note</strong>: The detailed explanation of the interaction type can be found below <br><br>",
@@ -630,6 +952,7 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     observeEvent(input$eb_check_button,{
+      req(!identical(input$com_type, "combatls"))
       if(length(input$interaction) > 0 & input$interaction != ""){
         interaction_enco <- sapply(strsplit(input$interaction, ",")[[1]], function(x) gsub("\\*", "\\,", x), USE.NAMES = FALSE)
         if(input$com_model == "gam"){
@@ -702,59 +1025,58 @@ comfam_shiny <- function(result, after = FALSE){
     })
 
     observeEvent(input$ComBat,{
-      save_path <- input$save_path
-      if(length(input$interaction) > 0 & input$interaction != ""){
-        interaction_enco <- sapply(strsplit(input$interaction, ",")[[1]], function(x) gsub("\\*", "\\,", x), USE.NAMES = FALSE)
-        if(input$com_model == "gam"){
-          smooth_int_type_enco <- strsplit(input$smooth_int_type, ",")[[1]]
-        }else{smooth_int_type_enco <- NULL}
-      }else{
-        interaction_enco <- NULL
-        smooth_int_type_enco <- NULL}
-      eb <- ifelse(input$eb_control == "Yes", TRUE, FALSE)
-      if(input$com_model == "gam"){
-        smooth <- input$smooth
-      }else{smooth <- NULL}
-      if(input$com_model == "lmer"){
-        random <- input$random
-      }else{random <- NULL}
-
-      if(input$ref_bat_select == "None"){
-        ref_bat <- NULL
-      }else{ref_bat <- input$ref_bat_select}
-
-      # Set up harmonization progress notification
-      msg <- sprintf('Start harmonization progress')
-      withProgress(message = msg, value = 0, {
-        setProgress(0.5, 'Harmonizing...')
-        combat_result <- combat_harm(eb_check = FALSE, result, type = input$com_model, random = input$random, smooth = input$smooth, interaction = interaction_enco, smooth_int_type = smooth_int_type_enco, family = input$com_type, ref.batch = ref_bat, predict = FALSE, object = NULL, reference = NULL, eb = eb)
-        combat_result_s(combat_result)
-        harm_df <- combat_result$harmonized_df
-        if(length(save_path) > 0 & save_path != ""){
-          write.csv(harm_df, save_path, row.names = FALSE)
+      combat_result_s(NULL)
+      combat_result <- tryCatch({
+        eb <- identical(input$eb_control, "Yes")
+        ref_bat <- if (is.null(input$ref_bat_select) || input$ref_bat_select == "None") NULL else input$ref_bat_select
+        harm_args <- list(result = result, family = input$com_type, eb = eb, ref.batch = ref_bat)
+        if (identical(input$com_type, "combatls")) {
+          if (!combatls_available) stop("ComBatLS is unavailable in this session.", call. = FALSE)
+          location_text <- trimws(if (is.null(input$combatls_formula)) "" else input$combatls_formula)
+          if (!nzchar(location_text)) stop("Enter a location formula, for example y ~ pb(AGE) + SEX.", call. = FALSE)
+          scale_text <- trimws(if (is.null(input$combatls_sigma_formula)) "" else input$combatls_sigma_formula)
+          harm_args$robust.LS <- isTRUE(input$combatls_robust)
+          harm_args$formula <- stats::as.formula(location_text)
+          harm_args$sigma.formula <- stats::as.formula(if (nzchar(scale_text)) scale_text else "~ 1")
+        } else {
+          interaction_text <- if (is.null(input$interaction)) "" else input$interaction
+          interaction_enco <- if (nzchar(interaction_text)) gsub("*", ",", strsplit(interaction_text, ",")[[1]], fixed = TRUE) else NULL
+          harm_args$type <- input$com_model
+          harm_args$random <- if (input$com_model == "lmer") input$random else NULL
+          harm_args$smooth <- if (input$com_model == "gam") input$smooth else NULL
+          harm_args$interaction <- interaction_enco
+          harm_args$smooth_int_type <- if (input$com_model == "gam" && !is.null(interaction_enco)) strsplit(input$smooth_int_type, ",")[[1]] else NULL
         }
-        setProgress(1, 'Complete!')
+        withProgress(message = "Harmonizing...", value = 0.5, {
+          fitted <- do.call(combat_harm, harm_args)
+          if (isTRUE(nzchar(input$save_path))) write.csv(fitted$harmonized_df, input$save_path, row.names = FALSE)
+          setProgress(1, "Complete!")
+          fitted
+        })
+      }, error = function(e) {
+        showNotification(conditionMessage(e), type = "error", duration = NULL)
+        NULL
       })
-
-      showNotification('Harmonization Completed', type = "message")
-
+      if (is.null(combat_result)) return()
+      combat_result_s(combat_result)
+      showNotification("Harmonization Completed", type = "message")
       output$output_msg <- renderPrint({
-        paste("DataFrame saved to:", input$save_path)
+        if (isTRUE(nzchar(input$save_path))) paste("DataFrame saved to:", input$save_path)
+        else "Harmonization completed. Enter a data path and run again to save the dataframe."
       })
-
     })
 
     observeEvent(input$ComBat_model,{
       model_save_path <- input$model_save_path
-      combat_result <- combat_result_s()
+      combat_result <- req(combat_result_s())
       msg <- sprintf('Saving ComBat Model')
       withProgress(message = msg, value = 0, {
         setProgress(0.5, 'Saving ...')
         harm_model <- combat_result$combat.object
-        if(combat_result$com_family == "comfam"){
-          harm_model$dat.combat <- NULL
+        if(combat_result$com_family %in% c("comfam", "combatls")){
+          harm_model$ComBat.model$dat.combat <- NULL
         }else{
-          harm_model$dat.covbat <- NULL
+          harm_model$ComBat.model$dat.covbat <- NULL
         }
         saveRDS(harm_model, file = model_save_path)
         setProgress(1, 'Complete!')
@@ -851,21 +1173,21 @@ comfam_shiny <- function(result, after = FALSE){
 
     output$test_batch_table <- DT::renderDT({
       if(input$test_batch == "Kenward-Roger (liner mixed model)"){
-        combat_table_gen(result, table_name = "kenward_roger")
+        combat_table_gen(result, table_name = "kenward_roger", significant_only = input$batch_significant_only)
       }else if(input$test_batch== "ANOVA"){
-        combat_table_gen(result, table_name = "anova")
+        combat_table_gen(result, table_name = "anova", significant_only = input$batch_significant_only)
       }else if(input$test_batch == "Kruskal-Wallis"){
-        combat_table_gen(result, table_name = "kruskal_wallis")
+        combat_table_gen(result, table_name = "kruskal_wallis", significant_only = input$batch_significant_only)
       }
     })
 
     output$test_variance <- DT::renderDT({
       if(input$test_variance == "Fligner-Killeen"){
-        combat_table_gen(result, table_name = "fligner_killeen")
+        combat_table_gen(result, table_name = "fligner_killeen", significant_only = input$variance_significant_only)
       }else if(input$test_variance == "Levene's Test"){
-        combat_table_gen(result, table_name = "levenes")
+        combat_table_gen(result, table_name = "levenes", significant_only = input$variance_significant_only)
       }else if(input$test_variance == "Bartlett's Test"){
-        combat_table_gen(result, table_name = "bartletts")
+        combat_table_gen(result, table_name = "bartletts", significant_only = input$variance_significant_only)
       }
     })
 
@@ -1502,6 +1824,11 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
 #' @param c A string specifying the covariate of interest for tables requiring a specific covariate. Default is `NULL`.
 #' @param PC1 A string specifying the first principal component for PCA variance tables. Default is `NULL`.
 #' @param PC2 A string specifying the second principal component for PCA variance tables. Default is `NULL`.
+#' @param significant_only For feature-level batch-effect test tables, show only
+#'   Bonferroni-adjusted p-values below 0.05 (default FALSE). Uses the stored
+#'   full-precision adjusted p-values, or significance symbols for older results
+#'   without numeric values. Does not recalculate tests or multiple-testing
+#'   adjustment and does not affect other table types.
 #'
 #' @return A `DT::datatable` object containing the requested table.
 #'
@@ -1519,7 +1846,23 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
 #' @export
 
 
-combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL, PC2 = NULL){
+combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL, PC2 = NULL,
+                             significant_only = FALSE){
+  test_tables <- c(kenward_roger = "kr_test_df", anova = "anova_test_df",
+    kruskal_wallis = "kw_test_df", fligner_killeen = "fk_test_df",
+    levenes = "lv_test_df", bartletts = "bl_test_df")
+  if (isTRUE(significant_only) && table_name %in% names(test_tables)) {
+    key <- test_tables[[table_name]]
+    tests <- result[[key]]
+    if (nrow(tests) > 0L) {
+      # visual_prep() stores Bonferroni-adjusted values in p.value.raw before
+      # formatting p.value; use that precision rather than the display strings.
+      significant <- if (is.numeric(tests$p.value.raw))
+        is.finite(tests$p.value.raw) & tests$p.value.raw < .05 else
+        tests$sig %in% c("*", "**", "***")
+      result[[key]] <- tests[significant, , drop = FALSE]
+    }
+  }
   info <- result$info
   type <- info$type
   df <- info$df
@@ -1619,7 +1962,7 @@ combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL,
                                                                                                                                                                               target = 'row',
                                                                                                                                                                               backgroundColor = styleEqual(c("*", "**", "***"), "lightyellow"))
   }else if(table_name == "bartletts"){
-    if(nrow(result$bl_test_df)!=0){
+    if(all(c("feature", "p.value", "sig") %in% names(result$bl_test_df))){
       result$bl_test_df %>% dplyr::select(dplyr::all_of(c("feature", "p.value", "sig"))) %>% datatable(extensions = 'Buttons', options = list(columnDefs = list(list(className = 'dt-center',
                                                                                                                                                                               targets = "_all")))) %>% formatStyle(columns = c("p.value"),color = styleEqual(result$red, "red")) %>% formatStyle(
                                                                                                                                                                                 'sig',

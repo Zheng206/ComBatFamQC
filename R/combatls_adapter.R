@@ -7,7 +7,6 @@
   }
 }
 
-# Keep the statistical implementation in ComBatFamily; translate only the API.
 .combatls_adapter <- function(data, bat, covar, formula, sigma.formula,
                               ref.batch, eb, robust.LS = FALSE, ...) {
   formula <- .combatls_formula(formula, covar, location = TRUE)
@@ -32,7 +31,6 @@
     stop("formula must use y as its response.", call. = FALSE)
 }
 
-# Resolve GAMLSS helpers without rewriting terms or discarding the caller's scope.
 .combatls_formula <- function(formula, covar, location) {
   .validate_combatls_formula(formula, location)
   label <- if (location) "formula" else "sigma.formula"
@@ -58,4 +56,13 @@
     environment(formula) <- list2env(bindings, parent = scope)
   }
   formula
+}
+
+# Optional UI availability check: keep the original interface if the backend
+# cannot load, is too old, or lacks the required entry point.
+.combatfamily_available <- function() {
+  tryCatch({
+    suppressMessages(suppressWarnings(.require_combatfamily()))
+    TRUE
+  }, error = function(e) FALSE)
 }
