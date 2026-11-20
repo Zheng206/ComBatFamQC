@@ -15,6 +15,10 @@
 #' @param df Dataset to be evaluated.
 #' @param cores number of cores used for parallel computing.
 #' @param mdmr A boolean variable indicating whether to run the MDMR test (default: `TRUE`).
+#' @param feature.units Optional named character vector of feature units. Otherwise
+#'   uses character `units` or `unit` attributes on the input columns, when present.
+#' @param covariate.units Optional named character vector of biological numeric
+#'   covariate units; otherwise uses input column attributes. Unknown units are recorded explicitly.
 #'
 #' @return `visual_prep` returns a list containing the following components:
 #' \item{residual_add_df}{Residuals that might contain additive and multiplicative joint batch effects}
@@ -32,6 +36,14 @@
 #' \item{bl_test_df}{A dataframe contains Bartlett's test results}
 #' \item{red}{A parameter to highlight significant p-values in result table}
 #' \item{info}{A list contains input information like batch, covariates, df etc}
+#' \item{biological_fixed_effects}{Biological parametric fixed-effect coefficients
+#' and model metadata from the same full feature fits used for multiplicative
+#' residuals. Intercepts, batch terms, and random effects are excluded. GAM smooths
+#' are identified as requiring a separate smooth-effect view, without basis coefficients.}
+#' Estimates retain response units. Intervals use Student t for `lm`, approximate
+#' normal Wald intervals for population fixed effects in `lmer`, and approximate
+#' normal intervals from mgcv's Bayesian covariance for parametric GAM coefficients
+#' conditional on smoothing parameters. Unavailable estimates/intervals carry status fields.
 #'
 #' @import pbkrtest
 #' @import parallel
@@ -50,8 +62,11 @@
 #' covariates = c("AGE", "SEX", "DIAGNOSIS"), df = head(adni, 500), cores = 1)
 #'
 
-visual_prep <- function(type = "lm", features, batch, covariates = NULL, interaction = NULL, random = NULL, smooth = NULL, smooth_int_type = NULL, df, cores = detectCores(), mdmr = TRUE){
+visual_prep <- function(type = "lm", features, batch, covariates = NULL, interaction = NULL, random = NULL, smooth = NULL, smooth_int_type = NULL, df, cores = detectCores(), mdmr = TRUE,
+                        feature.units = NULL, covariate.units = NULL){
   # Data Preparation
+  feature_units <- .biological_units(df, features, feature.units)
+  covariate_units <- .biological_units(df, covariates, covariate.units)
   info <- data_prep(stage = "harmonization", result = NULL, features = features, batch = batch, covariates = covariates, df = df, type = type, random = random, smooth = smooth, interaction = interaction, smooth_int_type = smooth_int_type, predict = FALSE, object = NULL)
   df <- info$df
   features <- info$features
@@ -63,6 +78,8 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
   smooth_int_type <- info$smooth_int_type
   interaction_orig <- info$interaction_orig
   smooth_orig <- info$smooth_orig
+  info$feature_units <- feature_units[features]
+  info$covariate_units <- covariate_units
   # Residual Plots
   vis_df <- df[colnames(df)[!colnames(df) %in% features]]
   residual_add_df <- mclapply(features, function(y){
@@ -103,12 +120,16 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
   }, mc.cores = cores) %>% bind_cols()
   residual_add_df <- cbind(vis_df, residual_add_df)
 
-  residual_ml_df <- mclapply(features, function(y){
+  feature_diagnostics <- mclapply(features, function(y){
     model <- model_gen(type = type, y = y, batch = batch, covariates = covariates, interaction = interaction, random = random, smooth = smooth, df = df)
     residual <- data.frame(resid(model))
     colnames(residual) <- y
-    return(residual)
-  }) %>% bind_cols()
+    list(residual = residual, biological = .biological_fixed_effects(model, feature = y,
+      batch = batch, biological = cov_shiny, feature_unit = feature_units[[y]],
+      covariate_units = covariate_units))
+  }, mc.cores = cores)
+  residual_ml_df <- bind_cols(lapply(feature_diagnostics, `[[`, "residual"))
+  biological_fixed_effects <- bind_rows(lapply(feature_diagnostics, `[[`, "biological"))
   residual_ml_df <- cbind(vis_df, residual_ml_df)
 
   # PCA Plots
@@ -279,7 +300,8 @@ visual_prep <- function(type = "lm", features, batch, covariates = NULL, interac
   red <- c(unique_kr, unique_fk, unique_mdmr, unique_anova, unique_kw, unique_lv, unique_bl, "<0.001")
 
   result <- list("residual_add_df" = residual_add_df, "residual_ml_df" = residual_ml_df, "pr.feature" = pr.feature, "pca_summary" = pca_summary, "pca_df" = pca_df, "tsne_df" = tsne_df, "kr_test_df" = kr_test_df, "fk_test_df" = fk_test_df, "mdmr.summary" = mdmr.summary,
-                "anova_test_df" = anova_test_df, "kw_test_df" = kw_test_df, "lv_test_df" = lv_test_df, "bl_test_df" = bl_test_df, "red" = red, "info" = info)
+                "anova_test_df" = anova_test_df, "kw_test_df" = kw_test_df, "lv_test_df" = lv_test_df, "bl_test_df" = bl_test_df, "red" = red, "info" = info,
+                "biological_fixed_effects" = biological_fixed_effects)
   return(result)
 }
 

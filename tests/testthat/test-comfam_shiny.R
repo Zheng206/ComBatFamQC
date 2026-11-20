@@ -66,6 +66,23 @@ test_that("comfam_shiny server logic works correctly", {
   })
 })
 
+test_that("numeric covariate plots handle an uninitialized transparency control", {
+  result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
+  for (batch_control in c("No", "Yes")) {
+    for (alpha in list(NULL, numeric(0), 0, 0.6)) {
+      plot <- combat_plot_gen(
+        result, result$info$features[1], plot_name = "cov_feature", c = "AGE",
+        batch_control = batch_control,
+        batch_level = levels(result$info$df[[result$info$batch]]), alpha = alpha
+      )
+      expect_no_warning(built <- ggplot2::ggplot_build(plot))
+      expected_alpha <- if (length(alpha) == 0L) 0.2 else alpha
+      expect_true(all(built$data[[2]]$alpha == expected_alpha))
+      expect_gt(nrow(built$data[[2]]), 0L)
+    }
+  }
+})
+
 test_that("Batch effect diagnostics plot generated correctly", {
   result <- readRDS(testthat::test_path("previous-results/lm_result.rds"))
   features <- result$info$features

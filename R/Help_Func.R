@@ -635,6 +635,11 @@ interaction_gen <- function(type = "lm", covariates = NULL, smooth = NULL, inter
 #' @param path The path to save the result.
 #' @param result A list derived from `visual_prep()` that contains datasets and statistical test results.
 #' @param use_quarto A boolean variable indicating whether to generate a Quarto report.
+#' @details Each report describes only the supplied diagnosis run. Biological fixed
+#' effects extracted by `visual_prep()` appear in HTML and in the Excel worksheet
+#' `Biological Fixed Effects`, including coding, units, formula, sample size, and
+#' availability status. GAM smooths require a separate smooth-effect view. Export
+#' does not refit models; older saved results without coefficients are marked unavailable.
 #'
 #' @return This function does not return a value. It saves the data to the specified file.
 #'
@@ -649,7 +654,7 @@ interaction_gen <- function(type = "lm", covariates = NULL, smooth = NULL, inter
 #'   batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
 #'   temp_dir <- tempfile()
 #'   dir.create(temp_dir)
-#'   diag_save(temp_dir, result, quarto = FALSE)
+#'   diag_save(temp_dir, result, use_quarto = FALSE)
 #'   message("Diagnostics saved to: ", temp_dir)
 #'   unlink(temp_dir, recursive = TRUE)  # Clean up the temporary directory
 #' }
@@ -659,16 +664,17 @@ interaction_gen <- function(type = "lm", covariates = NULL, smooth = NULL, inter
 #' }
 
 diag_save <- function(path, result, use_quarto = TRUE){
+  path <- normalizePath(path, mustWork = TRUE)
+  result$biological_fixed_effects <- .biological_report_table(result)
   quarto_package <- requireNamespace("quarto", quietly = TRUE)
   if(quarto_package){quarto_path <- quarto::quarto_path()}else{quarto_path <- NULL}
   if (use_quarto && !is.null(quarto_path) && quarto_package) {
     original_dir <- getwd()
     template_path <- system.file("quarto_templates/diagnosis_report.qmd", package = "ComBatFamQC")
     new_template_path <- file.path(path, basename(template_path))
-    if (!file.exists(new_template_path)) {
-      file.copy(template_path, new_template_path, overwrite = TRUE)
-      message("Template moved to: ", new_template_path)
-    }
+    file.copy(template_path, new_template_path, overwrite = TRUE)
+    result$biological_effects_html <- as.character(.biological_coefficient_view(result$biological_fixed_effects))
+    result$biological_coefficient_widget <- .biological_report_widget(result$biological_fixed_effects)
     output_file <- file.path(path, "diagnosis_report.html")
     setwd(path)
     on.exit(setwd(original_dir), add = TRUE)
@@ -679,7 +685,7 @@ diag_save <- function(path, result, use_quarto = TRUE){
 
     result <- lapply(result_names, function(name){
       if(name %in% test_names){
-        n <- nrow(result[[name]])
+        n <- NROW(result[[name]])
         if(n != 0){
           test_table <- result[[name]] %>% mutate(sig = ifelse(is.na(.data[["sig"]]), "", .data[["sig"]]))
         }else{test_table <- result[[name]]}
@@ -694,11 +700,16 @@ diag_save <- function(path, result, use_quarto = TRUE){
     names(result) <- result_names
 
     result$info$df <- result$info$df[, colSums(is.na(result$info$df)) == 0]
+    # Preserve data-frame types, numeric NA values, and coefficient precision
+    # across Quarto's separate R process instead of serializing tables to YAML.
+    report_data <- tempfile(".diagnosis-data-", tmpdir = path, fileext = ".rds")
+    saveRDS(result, report_data)
+    on.exit(unlink(report_data), add = TRUE)
 
     quarto::quarto_render(
       input = "diagnosis_report.qmd",
       output_file = "diagnosis_report.html",
-      execute_params = list(data = result)
+      execute_params = list(data_file = basename(report_data))
     )
   }else{
     if (use_quarto && (!quarto_package || is.null(Sys.which("quarto")[[1]]))) {
@@ -735,6 +746,15 @@ diag_save <- function(path, result, use_quarto = TRUE){
     addWorksheet(wb, "Fligner-Killeen")
     writeData(wb, "Fligner-Killeen", result$fk_test_df)
     addStyle(wb, sheet = "Fligner-Killeen", style = header_style, rows = 1, cols = seq_len(ncol(result$fk_test_df)), gridExpand = TRUE)
+    addWorksheet(wb, "Biological Fixed Effects")
+    biological_export <- .biological_excel_table(result$biological_fixed_effects)
+    writeData(wb, "Biological Fixed Effects", biological_export,
+      keepNA = TRUE, na.string = "Unavailable")
+    addStyle(wb, sheet = "Biological Fixed Effects", style = header_style, rows = 1,
+      cols = seq_len(ncol(result$biological_fixed_effects)), gridExpand = TRUE)
+    openxlsx::freezePane(wb, "Biological Fixed Effects", firstRow = TRUE)
+    openxlsx::addFilter(wb, "Biological Fixed Effects", rows = 1,
+      cols = seq_len(ncol(result$biological_fixed_effects)))
     saveWorkbook(wb, file = paste0(path, "/diagnosis.xlsx"), overwrite = TRUE)
   }
 }

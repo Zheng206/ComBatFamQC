@@ -22,11 +22,21 @@
 #' user's default web browser. Execution is blocked until the app is closed.
 #' Feature-level batch-effect tables can be filtered to Bonferroni-adjusted
 #' p-values below 0.05; the reported percentages still use all features.
+#' The Covariance Diagnostics tab compares prepared residual covariance and
+#' correlation across batches before harmonization, using `covariance_batch_check()`
+#' and `covariance_check_plot()`. These exploratory summaries inform review of CovBat.
+#' Sidebar controls include a feature-selection dialog. Displayed batches filter
+#' the matrices and distance tables while retaining the pooled reference from all
+#' eligible batches. Display changes reuse the check; feature or matrix changes
+#' require rerunning it. Frobenius distance is an optional table column.
 #' When a compatible optional ComBatFamily backend is available, the harmonization
 #' tab also offers ComBatLS with an explicit location formula, an optional scale
 #' formula (default `~ 1`), and robust estimation. Legacy model controls and the
 #' EB assumption diagnostic are replaced by a pre-harmonization Scale Model Check:
 #' candidate screening and model-implied centiles, with a compact fitting status.
+#' Centiles include an aligned observation-count strip. A collapsed fit check
+#' compares saved normalized residuals, binned RMS, and Q-Q plots for both models;
+#' these exploratory diagnostics use the fitting data and never refit models.
 #' Residual diagnostics remain available through `combatls_check_plot()` in R.
 #' Fits are cached until Run Model Check is clicked again; edits mark results stale.
 #' Scale-formula drafts are applied only on explicit user acceptance. Otherwise, only the original
@@ -101,6 +111,41 @@ comfam_shiny <- function(result, after = FALSE){
         }
         #combatqc-main { min-width: 0; }
         #scale_compare_centiles + span { white-space: nowrap; }
+        #combatqc-sidebar .help-block,
+        .combatls-centile-view .help-block {
+          margin: 1rem 0;
+          line-height: 1.55;
+        }
+        .combatls-centile-view .combatls-centile-profile {
+          margin: 1rem 0;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow-x: auto;
+        }
+        .combatls-centile-view details { margin: 1.25rem 0; }
+        .combatls-check-note,
+        .combatls-screen-interpretation p {
+          margin: 1rem 0;
+          line-height: 1.55;
+        }
+        #covariance_feature_choices {
+          max-height: 45vh;
+          overflow-y: auto;
+          padding: 0.75rem 1.75rem;
+          box-sizing: border-box;
+        }
+        #covariance_feature_choices .checkbox { margin: 0.5rem 0; }
+        #covariance_feature_choices label { overflow-wrap: anywhere; }
+        .covariance-feature-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0; }
+        .covariance-check-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+        .covariance-check-note { margin: 0 0 0.75rem; }
+        .covariance-status {
+          margin: 1rem 0 1.25rem;
+          color: #3c4858;
+          font-size: 1.05rem;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+        }
         #combatqc-main .datatables {
           max-width: 100%;
           overflow-x: auto;
@@ -118,6 +163,16 @@ comfam_shiny <- function(result, after = FALSE){
           overflow-wrap: anywhere;
           line-height: 1.5;
         }
+      ")), tags$script(HTML("
+        document.addEventListener('input', function(event) {
+          if (event.target.id !== 'covariance_feature_search') return;
+          var list = document.getElementById('covariance_feature_choices');
+          if (!list) return;
+          var query = event.target.value.trim().toLowerCase();
+          list.querySelectorAll('.checkbox').forEach(function(item) {
+            item.style.display = item.textContent.toLowerCase().indexOf(query) >= 0 ? '' : 'none';
+          });
+        });
       "))),
       titlePanel("Batch Effect Diagnostics"),
       sidebarLayout(
@@ -258,6 +313,34 @@ comfam_shiny <- function(result, after = FALSE){
                                actionButton("Diagnosis", "Export Diagnosis Result"),
                                verbatimTextOutput("output_msg_diag")))
           ),
+          conditionalPanel(condition="input.tabselected==7",
+                           fluidRow(shinydashboard::box(width = NULL, title = "Covariance check",
+                             p("Compare feature relationships across batches using covariate-adjusted residuals."),
+                             radioButtons("covariance_matrix", "Matrix type",
+                               choices = c("Correlation" = "correlation", "Covariance (pooled SD units)" = "covariance"),
+                               selected = "correlation"),
+                             tags$details(tags$summary(tags$strong("About these matrices")),
+                               helpText("Correlation compares feature relationships after removing within-batch feature scale. Covariance also reflects differences in feature variances and is expressed in pooled within-batch SD units.")),
+                             h5("Feature set"),
+                             p(tags$strong(textOutput("covariance_feature_summary", inline = TRUE))),
+                             div(class = "covariance-check-actions",
+                               actionButton("covariance_change_features", "Change features"),
+                               actionButton("covariance_run", "Run covariance check")),
+                             helpText("Changes to the feature set or matrix type require rerunning the check.",
+                               class = "covariance-check-note"),
+                             uiOutput("covariance_prompt"))),
+                           conditionalPanel("output.covariance_ready == true",
+                             fluidRow(shinydashboard::box(width = NULL, title = "Covariance display",
+                               checkboxGroupInput("covariance_plot_batches", "Displayed batches",
+                                 choices = levels(df[[batch]]), selected = utils::head(levels(df[[batch]]), 4)),
+                               radioButtons("covariance_view", "Matrix view",
+                                 choices = c("Batch matrices" = "batch", "Differences from pooled matrix" = "difference"),
+                                 selected = "batch"),
+                               checkboxInput("covariance_show_labels", "Show feature names", value = FALSE),
+                               sliderInput("covariance_pca_variance", "PCA variance explained target (%)",
+                                 min = 1, max = 100, value = 90, step = 1),
+                               helpText("Batch selection filters the matrices, PC spread heatmap, and both distance tables. Pooled references and the shared PC basis stay fixed across all eligible batches."))))
+          ),
           conditionalPanel(condition="input.tabselected==1",
                            radioButtons("data_view", "Overview Type", choices = c("Complete Data", "Exploratory Analysis"), selected = "Complete Data"),
                            uiOutput("explore_bar")
@@ -335,6 +418,35 @@ comfam_shiny <- function(result, after = FALSE){
                            value = FALSE, width = "100%"),
                          shiny::uiOutput("test_variance_ui"),
                          shiny::uiOutput("sig_pct_variance")))),
+            tabPanel("Covariance Diagnostics", value = 7,
+                     conditionalPanel("output.covariance_ready == true",
+                       div(class = "covariance-status", textOutput("covariance_status")),
+                       uiOutput("covariance_sampling_caution"),
+                       fluidRow(shinydashboard::box(width = 12,
+                         title = "Batch-specific matrices",
+                         plotOutput("covariance_matrices", height = "auto"),
+                         helpText(textOutput("covariance_display_status")),
+                         helpText(textOutput("covariance_exclusions")))),
+                       fluidRow(shinydashboard::box(width = 12,
+                         title = "Batch \u00d7 PC spread",
+                         textOutput("covariance_pca_status"),
+                         plotOutput("covariance_pca", height = "auto"),
+                         helpText("Each row is a batch and each column is a shared PC. A cell compares that batch\u2019s PC score SD with the pooled SD for the same PC: ",
+                           tags$strong("1"), " means equal spread, ", tags$strong("1.13"),
+                           " means 13% greater spread, and ", tags$strong("0.85"),
+                           " means 15% less. Compare batches within a column to see where their spread differs. The plot covers only the PCs shown and does not test whether those differences are statistically significant."))),
+                       fluidRow(shinydashboard::box(width = 12,
+                         title = "Distances from the pooled matrix",
+                         DT::DTOutput("covariance_sample_table"))),
+                       fluidRow(shinydashboard::box(width = 12,
+                         title = "Distances between batches",
+                         DT::DTOutput("covariance_pairwise_table"))),
+                       tags$details(tags$summary(tags$strong("How to assess CovBat")),
+                         p("CovBat targets batch differences in cross-feature covariance that may remain after location and scale harmonization. Correlation differences highlight changes in feature relationships; covariance differences can also reflect feature variance differences."),
+                         p("Both tables show off-diagonal RMS, spectral norm, largest absolute difference, and Frobenius distance. Off-diagonal RMS is the primary descriptive metric for feature relationships. Spectral norm captures the largest absolute change along a feature direction, and largest absolute difference identifies the most discrepant entry. Larger values indicate greater estimated differences, with no universal cutoff for choosing CovBat."),
+                         tags$details(tags$summary(tags$strong("Distance metric formulas")), .covariance_metric_formulas()),
+                         p("Method reference: ", tags$a("Chen et al., CovBat", href = "https://doi.org/10.1002/hbm.25688", target = "_blank", rel = "noopener noreferrer"))
+                       ))),
             if(!after){
               tabPanel("Harmonization", value = 6,
                        if (combatls_available) conditionalPanel(
@@ -344,17 +456,17 @@ comfam_shiny <- function(result, after = FALSE){
                          uiOutput("scale_check_prompt"),
                          conditionalPanel(
                            "output.scale_check_ready == true",
-                           helpText(textOutput("scale_check_status")),
+                           div(class = "combatls-check-note", helpText(textOutput("scale_check_status"))),
                            tabsetPanel(
                              tabPanel("Covariate screening",
-                                      helpText("Screen biological effects on variability before harmonization. Smooth-model tests are approximate; gray tiles indicate unavailable tests."),
+                                      div(class = "combatls-check-note",
+                                        helpText("Screen biological effects on variability before harmonization. Smooth-model tests are approximate; gray tiles indicate unavailable tests.")),
                                       checkboxInput("scale_heatmap_y_labels", "Show feature names on y-axis", value = TRUE),
                                       plotOutput("scale_screen_heatmap", height = "650px", width = "100%"),
                                       h4("Biological Scale Summary"),
                                       div(class = "combatqc-check-output",
                                           DT::DTOutput("scale_screen_summary", fill = FALSE)),
-                                      tags$details(
-                                        tags$summary(tags$strong("How to interpret these results")),
+                                      div(class = "combatls-screen-interpretation",
                                         p(tags$strong("Significant features"),
                                           " is the number of features with a BH-adjusted p-value below 0.05 for that covariate. BH adjustment is applied across features separately for each covariate. A nonsignificant result does not show that variability is constant."),
                                         p(tags$strong("Median SD ratio"),
@@ -378,6 +490,7 @@ comfam_shiny <- function(result, after = FALSE){
                                             DT::DTOutput("scale_screen_tests", fill = FALSE))
                                       )),
                              tabPanel("Centile curves",
+                               div(class = "combatls-centile-view",
                                       selectInput("scale_centile_feature", "Feature", choices = features, selected = features[1], width = "100%"),
                                       checkboxInput("scale_compare_centiles", "Compare proposed and screening centiles", value = TRUE, width = "100%"),
                                       conditionalPanel(
@@ -386,23 +499,33 @@ comfam_shiny <- function(result, after = FALSE){
                                           choices = c("Proposed" = "proposed", "Screening" = "screening"),
                                           selected = "proposed", inline = TRUE)
                                       ),
-                                      selectInput("scale_curve_x", "Horizontal covariate (original units)",
-                                        choices = numeric_covariates, selected = default_curve_x),
+                                      fluidRow(
+                                        column(6, selectInput("scale_curve_x", "Horizontal covariate (original units)",
+                                          choices = numeric_covariates, selected = default_curve_x, width = "100%")),
+                                        column(6, selectInput("scale_curve_group", "Separate curves by",
+                                          choices = c("None", char_var), selected = "None", width = "100%"))),
                                       helpText(textOutput("scale_centile_feature_note")),
-                                      selectInput("scale_curve_group", "Separate curves by", choices = c("None", char_var), selected = "None"),
                                       checkboxInput("scale_show_points", "Show observed measurements", value = FALSE),
-                                      conditionalPanel("input.scale_show_points",
-                                        helpText("Gray points are raw measurements with their own covariates and batch effects. They show observed spread, not calibrated observations from the displayed reference distribution.")),
-                                      plotOutput("scale_centiles"),
-                                      helpText("Curves show the fitted distribution for the displayed biological profile, standardized to the chosen batch target. Darker bands show the 25th-75th centiles and lighter bands the 5th-95th centiles, not confidence intervals. These exploratory results do not establish model adequacy."),
-                                      tags$details(tags$summary(tags$strong("Biological profile and batch target")),
-                                        p("The centile curves vary the covariates shown in the plot while holding other numeric covariates at their medians and categorical covariates at their most common levels. Predictions use either a reference batch or batch effects averaged on the model\u2019s link scale, weighted by the observed batch proportions. To assess model fit beyond the predicted centiles, use ",
-                                          tags$code("combatls_check_plot()"),
-                                          " in R to examine residual Q\u2013Q plots and residual patterns across covariates.")),
+                                      div(class = "combatls-centile-profile",
+                                        textOutput("scale_centile_profile")),
+                                      plotOutput("scale_centiles", height = "500px"),
+                                      helpText("At each x-axis value, curves use the displayed profile and batch target, holding other covariates at their median or most common level. Lines show fitted medians; dark and light bands show the 25th\u201375th and 5th\u201395th centiles. ",
+                                        tags$strong("These are not confidence intervals.")),
+                                      helpText("Raw points retain each person\u2019s covariates and batch, so their position relative to the bands is not a direct fit check. Use ",
+                                        tags$strong("Check model fit"), " below to examine residuals. These checks use the same data that fitted the models."),
+                                      tags$details(id = "scale_fit_details",
+                                        tags$summary(tags$strong("Check model fit")),
+                                        helpText("Both saved models are evaluated at the observations' own covariates and batches. Normalized residuals should be centered near zero with spread near one. These are exploratory checks on the fitting data, not validation."),
+                                        radioButtons("scale_fit_view", "Residual view",
+                                          choices = c("Residuals and binned RMS" = "residuals", "Q-Q plots" = "qq"),
+                                          selected = "residuals", inline = TRUE),
+                                        helpText(textOutput("scale_fit_status")),
+                                        plotOutput("scale_fit_diagnostics", height = "auto"),
+                                        helpText("Binned RMS summarizes how far normalized residuals fall from zero: values near 1 are expected under the fitted model, while higher or lower values indicate larger or smaller deviations. Each label shows the number of residuals in that bin. Dots appear only for bins with at least 10 finite residuals, and lines stop at gaps. The sample counts above show where observations are available, not model uncertainty.")),
                                       h4("Estimated conditional variability"),
                                       helpText("SD is compared at the observed 25th and 75th percentiles of the horizontal covariate, within each group when separated. Values use the covariate's original units; changes are descriptive model estimates."),
                                       div(class = "combatqc-check-output",
-                                        DT::DTOutput("scale_variability", fill = FALSE)))
+                                        DT::DTOutput("scale_variability", fill = FALSE))))
 
                            )
                          )
@@ -431,6 +554,184 @@ comfam_shiny <- function(result, after = FALSE){
   ## Server Design
   server <- function(input, output, session) {
     combat_result_s <- reactiveVal(NULL)
+    covariance_check_s <- reactiveVal(NULL)
+    covariance_features_s <- reactiveVal(utils::head(features, 20))
+    output$covariance_feature_summary <- renderText({
+      paste(length(covariance_features_s()), "of", length(features), "features selected")
+    })
+    output$covariance_feature_draft_summary <- renderText({
+      paste(length(input$covariance_feature_choices), "of", length(features), "features selected")
+    })
+    observeEvent(input$covariance_change_features, {
+      showModal(modalDialog(title = "Choose covariance features", size = "l", easyClose = TRUE,
+        textInput("covariance_feature_search", "Search features", value = "", width = "100%"),
+        div(class = "covariance-feature-actions",
+          actionButton("covariance_all_features", "Select all"),
+          actionButton("covariance_clear_features", "Clear"),
+          actionButton("covariance_first_features", "Use first 20")),
+        textOutput("covariance_feature_draft_summary"),
+        checkboxGroupInput("covariance_feature_choices", label = NULL, choices = features,
+          selected = covariance_features_s(), width = "100%"),
+        footer = tagList(modalButton("Cancel"), actionButton("covariance_apply_features", "Apply", class = "btn-primary"))))
+    })
+    observeEvent(input$covariance_all_features, {
+      updateCheckboxGroupInput(session, "covariance_feature_choices", selected = features)
+    })
+    observeEvent(input$covariance_clear_features, {
+      updateCheckboxGroupInput(session, "covariance_feature_choices", selected = character())
+    })
+    observeEvent(input$covariance_first_features, {
+      updateCheckboxGroupInput(session, "covariance_feature_choices", selected = utils::head(features, 20))
+    })
+    observeEvent(input$covariance_apply_features, {
+      selected <- features[features %in% input$covariance_feature_choices]
+      if (length(selected) < 2L) {
+        showNotification("Select at least two features before applying the selection.", type = "error")
+        return()
+      }
+      covariance_features_s(selected)
+      removeModal()
+    })
+    covariance_spec <- reactive({ list(features = covariance_features_s(), matrix = input$covariance_matrix) })
+    covariance_ready <- reactive({
+      saved <- covariance_check_s()
+      !is.null(saved) && identical(saved$input_spec, covariance_spec())
+    })
+    output$covariance_ready <- function(...) covariance_ready()
+    outputOptions(output, "covariance_ready", suspendWhenHidden = FALSE)
+    current_covariance_check <- reactive({ req(covariance_ready()); covariance_check_s() })
+    output$covariance_prompt <- renderUI({
+      if (is.null(covariance_check_s())) return(helpText("Select at least two features, then run the covariance check."))
+      if (!covariance_ready()) return(helpText("Covariance settings have changed. Run the covariance check again."))
+      NULL
+    })
+    observeEvent(input$covariance_run, {
+      previous_check <- isolate(covariance_check_s())
+      covariance_check_s(NULL)
+      tryCatch({
+        spec <- covariance_spec()
+        checked <- withProgress(message = "Comparing batch covariance matrices...", value = .5, {
+          covariance_batch_check(result, features = spec$features, matrix = spec$matrix)
+        })
+        checked$input_spec <- spec
+        covariance_check_s(checked)
+        choices <- names(checked$matrices)
+        selected <- intersect(isolate(input$covariance_plot_batches), choices)
+        if (is.null(previous_check) && !length(selected)) selected <- utils::head(choices, 4)
+        updateCheckboxGroupInput(session, "covariance_plot_batches", choices = choices, selected = selected)
+      }, error = function(e) showNotification(conditionMessage(e), type = "error", duration = NULL))
+    })
+    output$covariance_status <- renderText({
+      checked <- current_covariance_check()
+      paste(length(checked$features), "features \u00b7", length(checked$matrices),
+        "eligible batches \u00b7", checked$matrix)
+    })
+    output$covariance_sampling_caution <- renderUI({
+      samples <- current_covariance_check()$samples
+      affected <- samples[samples$high_dimensional, , drop = FALSE]
+      if (!nrow(affected)) return(NULL)
+      div(class = "alert alert-warning", role = "note",
+        tags$strong("Limited sample support: "),
+        paste0(paste(paste0(affected$batch, " (n = ", affected$rows_complete,
+          ", p = ", affected$feature_count, ")"), collapse = "; "), ". "),
+        "Here p >= n, so sample matrix rank is at most n - 1. Distances remain computable, but sampling variability may be substantial. A large distance alone does not establish a batch effect. Consider a smaller, scientifically chosen feature set. This notice includes hidden batches used in the pooled reference.")
+    })
+    covariance_display_batches <- reactive({
+      intersect(input$covariance_plot_batches, names(current_covariance_check()$matrices))
+    })
+    output$covariance_display_status <- renderText({
+      paste(length(covariance_display_batches()), "of", length(current_covariance_check()$matrices),
+        "batches displayed. The pooled reference uses all eligible batches.")
+    })
+    output$covariance_exclusions <- renderText({
+      checked <- current_covariance_check()
+      excluded <- checked$excluded_features$feature
+      messages <- character()
+      if (length(excluded)) messages <- c(messages, paste("Features excluded for insufficient residual variation:", paste(excluded, collapse = ", ")))
+      if (checked$missing_batch_rows > 0) messages <- c(messages,
+        paste(checked$missing_batch_rows, "rows excluded for missing batch labels."))
+      ineligible <- checked$samples[!checked$samples$eligible, , drop = FALSE]
+      if (nrow(ineligible)) messages <- c(messages, paste("Batches excluded for too few complete rows:",
+        paste(paste0(ineligible$batch, " (", ineligible$rows_complete, ")"), collapse = ", ")))
+      paste(messages, collapse = " ")
+    })
+    covariance_matrices_plot <- reactive({
+      checked <- current_covariance_check()
+      req(input$covariance_view)
+      batches <- covariance_display_batches()
+      validate(need(length(batches) > 0, "Select at least one eligible batch to display."))
+      covariance_check_plot(checked, type = input$covariance_view, batches = batches,
+        show.labels = isTRUE(input$covariance_show_labels))
+    })
+    output$covariance_matrices <- renderPlot({ covariance_matrices_plot() }, height = function() {
+      count <- length(covariance_display_batches())
+      columns <- .covariance_panel_columns(count, isTRUE(input$covariance_show_labels))
+      max(440, ceiling(count / columns) * if (isTRUE(input$covariance_show_labels)) 600 else 440)
+    })
+    covariance_pca_check <- reactive({
+      checked <- current_covariance_check()
+      target <- input$covariance_pca_variance
+      if (is.null(target)) target <- 90
+      validate(need(is.numeric(target) && length(target) == 1L && is.finite(target) &&
+        target >= 1 && target <= 100, "Choose a PCA variance target between 1% and 100%."))
+      checked$pca <- .covariance_pca_select(checked$pca, target / 100)
+      checked
+    })
+    output$covariance_pca_status <- renderText({
+      pca <- covariance_pca_check()$pca
+      paste0(pca$retained, " retained PC", if (pca$retained == 1L) "" else "s",
+        " \u00b7 ", sprintf("%.1f%%", 100 * pca$explained),
+        " of pooled, scaled within-batch variance explained (target ",
+        sprintf("%g%%", 100 * pca$target), ")",
+        if (pca$explained < pca$target - 1e-12) "; PC limit reached" else "")
+    })
+    covariance_pca_plot <- reactive({
+      batches <- covariance_display_batches()
+      validate(need(length(batches) > 0, "Select at least one eligible batch to display."))
+      covariance_check_plot(covariance_pca_check(), type = "pca", batches = batches)
+    })
+    output$covariance_pca <- renderPlot({ covariance_pca_plot() }, height = function() {
+      max(300, 140 + 50 * length(covariance_display_batches()))
+    })
+    covariance_sample_data <- reactive({
+      checked <- current_covariance_check()
+      data <- merge(checked$samples, checked$to_pooled, by = "batch", all.x = TRUE, sort = FALSE)
+      data[match(covariance_display_batches(), data$batch), , drop = FALSE]
+    })
+    covariance_pairwise_data <- reactive({
+      data <- current_covariance_check()$pairwise
+      batches <- covariance_display_batches()
+      data[data$batch_1 %in% batches & data$batch_2 %in% batches, , drop = FALSE]
+    })
+    covariance_sample_rows <- reactive({
+      data <- covariance_sample_data()
+      data.frame(Batch = data$batch, `Off-diagonal RMS` = data$off_diagonal_rms,
+        `Spectral norm` = data$spectral, `Largest absolute difference` = data$max_abs,
+        `Frobenius distance` = data$frobenius,
+        `Complete rows (n)` = data$rows_complete, `Features (p)` = data$feature_count,
+        `Matrix rank` = data$matrix_rank, Status = data$status, check.names = FALSE)
+    })
+    covariance_pairwise_rows <- reactive({
+      data <- covariance_pairwise_data()
+      data.frame(`Batch 1` = data$batch_1, `Batch 2` = data$batch_2,
+        `Off-diagonal RMS` = data$off_diagonal_rms, `Spectral norm` = data$spectral,
+        `Largest absolute difference` = data$max_abs, `Frobenius distance` = data$frobenius,
+        check.names = FALSE)
+    })
+    covariance_distance_table <- function(data, empty_message) {
+      table <- DT::datatable(data, rownames = FALSE,
+        options = list(dom = "tip", paging = nrow(data) > 10, pageLength = 10,
+          scrollX = TRUE, order = list(list(match("Off-diagonal RMS", names(data)) - 1L, "desc")),
+          language = list(emptyTable = empty_message)))
+      columns <- intersect(c("Off-diagonal RMS", "Spectral norm", "Largest absolute difference", "Frobenius distance"), names(data))
+      DT::formatRound(table, columns, digits = 3)
+    }
+    output$covariance_sample_table <- DT::renderDT({
+      covariance_distance_table(covariance_sample_rows(), "Select at least one eligible batch to display.")
+    })
+    output$covariance_pairwise_table <- DT::renderDT({
+      covariance_distance_table(covariance_pairwise_rows(), "Select at least two eligible batches to compare pairs.")
+    })
     scale_check_s <- reactiveVal(NULL)
     scale_check_spec <- reactive({
       list(location = input$combatls_formula, scale = input$combatls_sigma_formula,
@@ -501,7 +802,7 @@ comfam_shiny <- function(result, after = FALSE){
       checked <- current_scale_check()
       validate(need(nrow(checked$screening) > 0, "Select candidate scale covariates to screen."))
       combatls_check_plot(checked, "screening",
-        show.y.labels = !identical(input$scale_heatmap_y_labels, FALSE))
+        show.y.labels = !identical(input$scale_heatmap_y_labels, FALSE)) + .combatls_plot_text_theme()
     })
     scale_screen_tables <- reactive({ .combatls_screening_display(current_scale_check()) })
     output$scale_screen_summary <- DT::renderDT({
@@ -547,13 +848,40 @@ comfam_shiny <- function(result, after = FALSE){
                  x = spec$x, group = spec$group, model = spec$model),
                error = function(e) validate(need(FALSE, conditionMessage(e))))
     })
+    output$scale_centile_profile <- renderText({
+      spec <- scale_centile_spec()
+      .combatls_profile_summary(spec$check, spec$x, spec$group)
+    })
+    scale_observation_bins <- reactive({
+      spec <- scale_centile_spec()
+      tryCatch(.combatls_observation_bins(spec$check, spec$feature, spec$x, spec$group),
+        error = function(e) validate(need(FALSE, conditionMessage(e))))
+    })
     output$scale_centiles <- renderPlot({
       plot <- scale_centile_plot_cached()
       if (isTRUE(input$scale_show_points)) {
         spec <- scale_centile_spec()
         plot <- .combatls_add_observations(plot, spec$check, spec$feature, spec$x, spec$group)
       }
-      plot + labs(caption = NULL)
+      grid::grid.draw(.combatls_centiles_with_counts(plot, scale_observation_bins()))
+    })
+    scale_fit_data <- reactive({
+      spec <- scale_centile_spec()
+      .combatls_fit_view_data(spec$check, spec$feature, scale_observation_bins())
+    })
+    output$scale_fit_status <- renderText({
+      status <- scale_fit_data()$status
+      messages <- status[nzchar(status$message), , drop = FALSE]
+      if (!nrow(messages)) return(NULL)
+      paste(paste0(messages$scale_model, ": ", messages$message), collapse = " ")
+    })
+    output$scale_fit_diagnostics <- renderPlot({
+      view <- if (identical(input$scale_fit_view, "qq")) "qq" else "residuals"
+      .combatls_fit_view_plot(scale_fit_data(), view)
+    }, height = function() {
+      groups <- length(unique(scale_observation_bins()$bins$curve_group))
+      if (identical(input$scale_fit_view, "qq")) max(300, 210 * groups)
+      else max(460, 260 * groups + 160)
     })
     scale_variability <- reactive({
       spec <- scale_centile_spec()
@@ -1319,6 +1647,8 @@ combat_plot_gen <- function(result, f = NULL, batch_control = "No", batch_level 
     ## covariate vs feature plot
     if (!is.null(covariates)){
       if(c %in% num_var){
+        # Dynamic Shiny controls can be unset during the first plot render.
+        if (length(alpha) == 0L) alpha <- 0.2
         if(batch_control == "No"){
           ggplot(df, aes(x = .data[[c]], y = .data[[f]])) +
             geom_point() +
@@ -1973,5 +2303,4 @@ combat_table_gen <- function(result, table_name, f = NULL, c = NULL, PC1 = NULL,
 
   }
 }
-
 

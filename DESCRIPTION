@@ -53,6 +53,7 @@ Suggests:
     quarto,
     spelling,
     systemfonts,
+    withr
 Remotes: andy1764/ComBatFamily
 VignetteBuilder: knitr
 Config/testthat/edition: 3

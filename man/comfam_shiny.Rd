@@ -22,11 +22,21 @@ When this function is called, it starts a Shiny application in the
 user's default web browser. Execution is blocked until the app is closed.
 Feature-level batch-effect tables can be filtered to Bonferroni-adjusted
 p-values below 0.05; the reported percentages still use all features.
+The Covariance Diagnostics tab compares prepared residual covariance and
+correlation across batches before harmonization, using \code{covariance_batch_check()}
+and \code{covariance_check_plot()}. These exploratory summaries inform review of CovBat.
+Sidebar controls include a feature-selection dialog. Displayed batches filter
+the matrices and distance tables while retaining the pooled reference from all
+eligible batches. Display changes reuse the check; feature or matrix changes
+require rerunning it. Frobenius distance is an optional table column.
 When a compatible optional ComBatFamily backend is available, the harmonization
 tab also offers ComBatLS with an explicit location formula, an optional scale
 formula (default \code{~ 1}), and robust estimation. Legacy model controls and the
 EB assumption diagnostic are replaced by a pre-harmonization Scale Model Check:
 candidate screening and model-implied centiles, with a compact fitting status.
+Centiles include an aligned observation-count strip. A collapsed fit check
+compares saved normalized residuals, binned RMS, and Q-Q plots for both models;
+these exploratory diagnostics use the fitting data and never refit models.
 Residual diagnostics remain available through \code{combatls_check_plot()} in R.
 Fits are cached until Run Model Check is clicked again; edits mark results stale.
 Scale-formula drafts are applied only on explicit user acceptance. Otherwise, only the original

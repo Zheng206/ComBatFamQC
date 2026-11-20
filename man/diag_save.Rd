@@ -19,13 +19,20 @@ This function does not return a value. It saves the data to the specified file.
 \description{
 Save all the batch effect diagnosis results in a single Excel file or a Quarto report.
 }
+\details{
+Each report describes only the supplied diagnosis run. Biological fixed
+effects extracted by \code{visual_prep()} appear in HTML and in the Excel worksheet
+\verb{Biological Fixed Effects}, including coding, units, formula, sample size, and
+availability status. GAM smooths require a separate smooth-effect view. Export
+does not refit models; older saved results without coefficients are marked unavailable.
+}
 \examples{
 if(interactive()){
   result <- visual_prep(type = "lm", features = "thickness.left.cuneus",
   batch = "manufac", covariates = "AGE", df = adni[1:100, ], mdmr = FALSE, cores = 1)
   temp_dir <- tempfile()
   dir.create(temp_dir)
-  diag_save(temp_dir, result, quarto = FALSE)
+  diag_save(temp_dir, result, use_quarto = FALSE)
   message("Diagnostics saved to: ", temp_dir)
   unlink(temp_dir, recursive = TRUE)  # Clean up the temporary directory
 }

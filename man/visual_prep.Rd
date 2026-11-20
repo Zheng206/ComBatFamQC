@@ -15,7 +15,9 @@ visual_prep(
   smooth_int_type = NULL,
   df,
   cores = detectCores(),
-  mdmr = TRUE
+  mdmr = TRUE,
+  feature.units = NULL,
+  covariate.units = NULL
 )
 }
 \arguments{
@@ -42,6 +44,12 @@ visual_prep(
 \item{cores}{number of cores used for parallel computing.}
 
 \item{mdmr}{A boolean variable indicating whether to run the MDMR test (default: \code{TRUE}).}
+
+\item{feature.units}{Optional named character vector of feature units. Otherwise
+uses character \code{units} or \code{unit} attributes on the input columns, when present.}
+
+\item{covariate.units}{Optional named character vector of biological numeric
+covariate units; otherwise uses input column attributes. Unknown units are recorded explicitly.}
 }
 \value{
 \code{visual_prep} returns a list containing the following components:
@@ -60,6 +68,14 @@ visual_prep(
 \item{bl_test_df}{A dataframe contains Bartlett's test results}
 \item{red}{A parameter to highlight significant p-values in result table}
 \item{info}{A list contains input information like batch, covariates, df etc}
+\item{biological_fixed_effects}{Biological parametric fixed-effect coefficients
+and model metadata from the same full feature fits used for multiplicative
+residuals. Intercepts, batch terms, and random effects are excluded. GAM smooths
+are identified as requiring a separate smooth-effect view, without basis coefficients.}
+Estimates retain response units. Intervals use Student t for \code{lm}, approximate
+normal Wald intervals for population fixed effects in \code{lmer}, and approximate
+normal intervals from mgcv's Bayesian covariance for parametric GAM coefficients
+conditional on smoothing parameters. Unavailable estimates/intervals carry status fields.
 }
 \description{
 Prepare relevant datasets and statistical test results for batch/site effect diagnostic visualization.

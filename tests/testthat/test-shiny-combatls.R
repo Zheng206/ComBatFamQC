@@ -38,10 +38,17 @@ test_that("Shiny adds ComBatLS formula controls only with an available backend",
   expect_match(page, 'id="scale_table_covariate"', fixed = TRUE)
   expect_match(page, 'id="scale_significant_only"', fixed = TRUE)
   expect_false(grepl('>Model fit<', page, fixed = TRUE))
-  expect_match(page, "do not establish model adequacy", fixed = TRUE)
+  expect_match(page, "<strong>These are not confidence intervals.</strong>", fixed = TRUE)
+  expect_false(grepl("Biological profile and batch target", page, fixed = TRUE))
+  expect_match(page, 'id="scale_centile_profile"', fixed = TRUE)
   expect_match(page, 'id="scale_check_status"', fixed = TRUE)
   expect_match(page, 'id="scale_show_points"', fixed = TRUE)
   expect_match(page, 'id="scale_variability"', fixed = TRUE)
+  expect_match(page, '<details id="scale_fit_details">', fixed = TRUE)
+  expect_match(page, "Check model fit", fixed = TRUE)
+  expect_match(page, 'id="scale_fit_view"', fixed = TRUE)
+  expect_match(page, 'id="scale_fit_diagnostics"', fixed = TRUE)
+  expect_match(page, "These checks use the same data that fitted the models.", fixed = TRUE)
   expect_match(page, 'value="AGE" selected', fixed = TRUE)
   expect_match(page, 'value="~ 1"', fixed = TRUE)
   expect_match(page, "input.com_type", fixed = TRUE)
@@ -97,7 +104,7 @@ test_that("optional backend availability handles namespace or version failures",
 test_that("Shiny renders smooth centiles and SD comparisons from cached fits", {
   suppressWarnings(skip_if_not_installed("ComBatFamily", "0.2.2"))
   result <- shiny_combatls_fixture()
-  result$info$features <- result$info$features[1L]
+  result$info$features <- result$info$features[1:2]
   run_fit <- .combatls_exploratory_fit
   fit_calls <- 0L
   local_mocked_bindings(.combatls_exploratory_fit = function(...) {
@@ -120,11 +127,33 @@ test_that("Shiny renders smooth centiles and SD comparisons from cached fits", {
       "AGE", "SEX", model = "both"))
     expect_true(all(is.finite(scale_variability()$sd_change_pct)))
     expect_true(nzchar(output$scale_centiles$src))
+    expect_match(output$scale_centile_profile, "AGE varies", fixed = TRUE)
+    expect_match(output$scale_centile_profile, "(separate curves)", fixed = TRUE)
+    expect_match(output$scale_centile_profile, "Batch target = pooled", fixed = TRUE)
+    expect_equal(sum(scale_observation_bins()$bins$n), nrow(saved$data))
+    expect_equal(sum(scale_fit_data()$bins$n), 2L * nrow(saved$data))
+    expect_true(nzchar(output$scale_fit_diagnostics$src))
+    session$setInputs(scale_fit_view = "qq")
+    expect_true(nzchar(output$scale_fit_diagnostics$src))
     session$setInputs(scale_curve_group = "None", scale_compare_centiles = FALSE,
-                      scale_centile_model = "screening")
+                      scale_centile_model = "screening", scale_fit_view = "residuals",
+                      scale_centile_feature = result$info$features[2L])
     expect_true(nzchar(output$scale_centiles$src))
+    expect_false(grepl("(separate curves)", output$scale_centile_profile, fixed = TRUE))
+    expect_true(nzchar(output$scale_fit_diagnostics$src))
+    expect_equal(unique(scale_fit_data()$points$observed), saved$data[[result$info$features[2L]]])
+    expect_setequal(scale_fit_data()$points$model, c("proposed", "screening"))
     expect_identical(unique(scale_centile_plot_cached()$data$model), "screening")
     expect_identical(scale_check_s(), saved)
+    expect_identical(fit_calls, saved_fit_calls)
+    # An invalid proposed fit must not hide the valid screening residuals.
+    invalid <- saved
+    invalid$fits[[result$info$features[2L]]]$converged <- FALSE
+    scale_check_s(invalid)
+    session$flushReact()
+    expect_match(output$scale_fit_status, "Proposed: Unavailable")
+    expect_identical(unique(scale_fit_data()$points$model), "screening")
+    expect_true(nzchar(output$scale_fit_diagnostics$src))
     expect_identical(fit_calls, saved_fit_calls)
   })
 })
@@ -213,6 +242,8 @@ test_that("Shiny caches model checks, detects stale formulas, and only applies d
     expect_false(output$scale_check_ready)
     expect_match(output$scale_check_prompt$html, "Model settings have changed")
     expect_error(current_scale_check(), class = "shiny.silent.error")
+    expect_error(scale_observation_bins(), class = "shiny.silent.error")
+    expect_error(scale_fit_data(), class = "shiny.silent.error")
     expect_identical(check_calls, 1L)
     session$setInputs(scale_model_check = 2)
     expect_identical(check_calls, 2L)
